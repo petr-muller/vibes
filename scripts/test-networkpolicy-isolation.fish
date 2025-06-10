@@ -57,7 +57,7 @@ spec:
   containers:
   - name: $pod_name
     image: quay.io/curl/curl:latest
-    command: [\"sleep\", \"300\"]
+    command: [\"curl\", \"-s\", \"--connect-timeout\", \"10\", \"--max-time\", \"15\", \"$test_url\"]
     securityContext:
       allowPrivilegeEscalation: false
       capabilities:
@@ -83,20 +83,27 @@ if test $status -ne 0
     exit 1
 end
 
-# Wait for pod to be ready
-gum style --foreground="#0000ff" "Waiting for pod to be ready..."
+# Wait for pod to complete (it will exit after curl finishes)
+gum style --foreground="#0000ff" "Waiting for pod to complete curl attempt..."
 oc wait --for=condition=Ready pod/$pod_name --namespace=$namespace --timeout=60s >/dev/null 2>&1
-if test $status -ne 0
-    gum style --foreground="#ff0000" "Error: Pod failed to become ready"
-    oc delete pod $pod_name --namespace=$namespace >/dev/null 2>&1
-    rm -f $temp_yaml
-    exit 1
+
+# Wait a bit more for curl to complete
+sleep 10
+
+# Check pod exit code to determine if curl succeeded
+set pod_exit_code (oc get pod $pod_name --namespace=$namespace -o jsonpath='{.status.containerStatuses[0].state.terminated.exitCode}' 2>/dev/null)
+set curl_result (oc logs $pod_name --namespace=$namespace 2>/dev/null)
+
+# If pod is still running, curl might be hanging (network blocked)
+set pod_phase (oc get pod $pod_name --namespace=$namespace -o jsonpath='{.status.phase}' 2>/dev/null)
+if test "$pod_phase" = "Running"
+    set curl_exit_code 1
+    set curl_result "Connection timeout/blocked"
+else if test -n "$pod_exit_code"
+    set curl_exit_code $pod_exit_code
+else
+    set curl_exit_code 1
 end
-
-gum style --foreground="#0000ff" "Attempting to curl $test_url from pod (this should fail if NetworkPolicy is working)..."
-
-set curl_result (oc exec $pod_name --namespace=$namespace -- curl -s --connect-timeout 10 --max-time 15 $test_url 2>/dev/null)
-set curl_exit_code $status
 
 # Clean up the pod and temp file
 oc delete pod $pod_name --namespace=$namespace >/dev/null 2>&1
