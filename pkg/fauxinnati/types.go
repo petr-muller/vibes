@@ -19,7 +19,7 @@ type Node struct {
 type Edge [2]int
 
 type ConditionalEdge struct {
-	Edges []ConditionalUpdate    `json:"edges"`
+	Edges []ConditionalUpdate     `json:"edges"`
 	Risks []ConditionalUpdateRisk `json:"risks"`
 }
 

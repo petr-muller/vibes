@@ -43,6 +43,7 @@ go test ./pkg/fauxinnati -v
 - Maintain backward compatibility for existing scripts
 - Update README.md when adding new tools or significant changes
 - Use gotestsum for running tests to get enhanced output and better test reporting
+- Run `gofmt -w .` to format Go code before committing
 
 ## File Structure
 

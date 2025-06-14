@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/spf13/cobra"
 	"github.com/petr-muller/vibes/pkg/fauxinnati"
+	"github.com/spf13/cobra"
 )
 
 var (
@@ -19,7 +19,7 @@ var rootCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		server := fauxinnati.NewServer()
 		if err := server.Start(port); err != nil {
-			fmt.Fprintf(os.Stderr, "Error starting server: %v\n", err)
+			_, _ = fmt.Fprintf(os.Stderr, "Error starting server: %v\n", err)
 			os.Exit(1)
 		}
 	},
@@ -31,7 +31,7 @@ func init() {
 
 func main() {
 	if err := rootCmd.Execute(); err != nil {
-		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+		_, _ = fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 		os.Exit(1)
 	}
 }
