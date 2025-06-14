@@ -26,6 +26,9 @@ dist/
 build/
 target/
 
+# Built binaries
+/fauxinnati
+
 # Dependencies
 node_modules/
 
