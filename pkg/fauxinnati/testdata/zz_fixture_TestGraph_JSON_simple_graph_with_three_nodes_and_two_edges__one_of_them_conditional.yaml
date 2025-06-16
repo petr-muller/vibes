@@ -1,0 +1,62 @@
+{
+  "nodes": [
+    {
+      "version": "4.19.0",
+      "payload": "quay.io/openshift-release-dev/ocp-release@sha256:3482dbdce3a6fb2239684d217bba6fc87453eff3bdb72f5237be4beb22a2160b",
+      "metadata": {
+        "io.openshift.upgrades.graph.release.channels": "candidate-4.19,candidate-4.20",
+        "io.openshift.upgrades.graph.release.manifestref": "sha256:3482dbdce3a6fb2239684d217bba6fc87453eff3bdb72f5237be4beb22a2160b",
+        "url": "https://access.redhat.com/errata/RHSA-2024:11038"
+      }
+    },
+    {
+      "version": "4.19.1",
+      "payload": "quay.io/openshift-release-dev/ocp-release@sha256:1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef",
+      "metadata": {
+        "io.openshift.upgrades.graph.release.channels": "candidate-4.19,candidate-4.20",
+        "io.openshift.upgrades.graph.release.manifestref": "sha256:1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef",
+        "url": "https://access.redhat.com/errata/RHSA-2024:11039"
+      }
+    },
+    {
+      "version": "4.19.2",
+      "payload": "quay.io/openshift-release-dev/ocp-release@sha256:abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890",
+      "metadata": {
+        "io.openshift.upgrades.graph.release.channels": "candidate-4.19,candidate-4.20",
+        "io.openshift.upgrades.graph.release.manifestref": "sha256:abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890",
+        "url": "https://access.redhat.com/errata/RHSA-2024:11040"
+      }
+    }
+  ],
+  "edges": [
+    [
+      0,
+      1
+    ]
+  ],
+  "conditionalEdges": [
+    {
+      "edges": [
+        {
+          "from": "4.19.1",
+          "to": "4.19.2"
+        }
+      ],
+      "risks": [
+        {
+          "url": "https://issues.redhat.com/browse/CNF-17689",
+          "name": "MetallbBgpBfdFrrRpm",
+          "message": "Clusters using MetalLB BFD capabilities alongside BGP can fail to establish BGP peering, reducing the availability of LoadBalancer services exposed by MetalLB, or even making them unreachable",
+          "matchingRules": [
+            {
+              "type": "PromQL",
+              "promql": {
+                "promql": "(\n  group by (_id, name) (csv_succeeded{_id=\"\", name=~\"metallb-operator[.].*\"})\n  or on (_id)\n  0 * label_replace(group by (_id) (csv_succeeded{_id=\"\"}), \"name\", \"metallb operator not installed\", \"name\", \".*\")\n)"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

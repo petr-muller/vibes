@@ -1,0 +1,37 @@
+{
+  "edges": [
+    {
+      "from": "4.18.0",
+      "to": "4.19.0"
+    },
+    {
+      "from": "4.19.0",
+      "to": "4.20.0"
+    }
+  ],
+  "risks": [
+    {
+      "url": "https://issues.redhat.com/browse/CNF-17689",
+      "name": "MetallbBgpBfdFrrRpm",
+      "message": "Clusters using MetalLB BFD capabilities alongside BGP can fail to establish BGP peering, reducing the availability of LoadBalancer services exposed by MetalLB, or even making them unreachable",
+      "matchingRules": [
+        {
+          "type": "PromQL",
+          "promql": {
+            "promql": "(\n  group by (_id, name) (csv_succeeded{_id=\"\", name=~\"metallb-operator[.].*\"})\n  or on (_id)\n  0 * label_replace(group by (_id) (csv_succeeded{_id=\"\"}), \"name\", \"metallb operator not installed\", \"name\", \".*\")\n)"
+          }
+        }
+      ]
+    },
+    {
+      "url": "https://issues.redhat.com/browse/OCPNODE-3245",
+      "name": "KubeletStartFailingFromRestoreconTimeout",
+      "message": "In some cases, a SELinux restorecon run as a prerequisite of kubelet.service was failing.",
+      "matchingRules": [
+        {
+          "type": "Always"
+        }
+      ]
+    }
+  ]
+}

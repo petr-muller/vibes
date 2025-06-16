@@ -1,0 +1,20 @@
+{
+  "edges": [
+    {
+      "from": "4.18.0",
+      "to": "4.19.0"
+    }
+  ],
+  "risks": [
+    {
+      "url": "https://issues.redhat.com/browse/OCPNODE-3245",
+      "name": "KubeletStartFailingFromRestoreconTimeout",
+      "message": "In some cases, a SELinux restorecon run as a prerequisite of kubelet.service was failing.",
+      "matchingRules": [
+        {
+          "type": "Always"
+        }
+      ]
+    }
+  ]
+}
