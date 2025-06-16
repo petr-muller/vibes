@@ -4,33 +4,7 @@ A collection of utility scripts and tools for OpenShift development and testing.
 
 ## Tools
 
-### fauxinnati
-
-A mock implementation of the Red Hat OpenShift Cincinnati update graph protocol server.
-
-**Features:**
-- Simple Cobra CLI application
-- Supports the `version-not-found` channel with A→B→C version progression
-- Generates realistic Cincinnati response metadata
-- No external OpenShift API dependencies
-
-**Usage:**
-```bash
-# Build the server
-go build -o fauxinnati ./cmd/fauxinnati
-
-# Start server (default port 8080)
-./fauxinnati
-
-# Start on custom port
-./fauxinnati --port 9090
-
-# Test the API
-curl "http://localhost:8080/api/upgrades_info/graph?channel=version-not-found&version=4.17.5&arch=amd64"
-```
-
-**API Endpoint:**
-- `GET /api/upgrades_info/graph` - Returns update graph based on channel and version parameters
+- **fauxinnati** - Mock Cincinnati update graph server (see [cmd/fauxinnati/README.md](cmd/fauxinnati/README.md))
 
 ## Scripts
 
@@ -42,39 +16,35 @@ See [scripts/README.md](scripts/README.md) for detailed documentation.
 
 ## Requirements
 
-- Go 1.24+ (for fauxinnati)
+- Go 1.24+ (for Go tools)
 - Fish shell (for Fish scripts)
 - Google Cloud SDK (`gsutil`)
 - `gum` terminal UI library
 
-## Usage
+## Development
 
-### fauxinnati Server
+### Go Code Standards
 
-```bash
-go build -o fauxinnati ./cmd/fauxinnati
-./fauxinnati --port 8080
-```
+- Run `gofmt -w .` to format Go code before committing
+- Use `gotestsum` for running tests to get enhanced output
+- Keep dependencies minimal
+- Follow Go best practices and idioms
 
 ### Testing
 
-Run tests using gotestsum for enhanced output:
-
 ```bash
-# Run all tests with enhanced output
-gotestsum ./pkg/fauxinnati
+# Run tests with enhanced output
+gotestsum ./...
 
-# Run tests with verbose output
-gotestsum --format testname ./pkg/fauxinnati
+# Run tests for specific package
+gotestsum ./pkg/packagename
 
 # Traditional go test also works
-go test ./pkg/fauxinnati -v
+go test ./... -v
 ```
 
-### Scripts
+### General Guidelines
 
-Scripts can be run directly from the `scripts/` directory:
-
-```bash
-./scripts/search-ci-failures.fish openshift/origin pull-ci-openshift-origin-master-e2e-aws 'test failed'
-```
+- Follow existing code conventions in each directory
+- Update relevant README files when adding features
+- Maintain backward compatibility for existing tools
