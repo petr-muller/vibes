@@ -72,14 +72,18 @@ func TestServer_generateVersionNotFoundGraph(t *testing.T) {
 		baseVersion semver.Version
 		arch        string
 		channel     string
-		expected    Graph
 	}{
 		{
-			name:        "generates A->B->C graph from version 4.17.5",
+			name:        "generates A->B->C graph derived from version 4.17.5 but not including it",
 			baseVersion: semver.MustParse("4.17.5"),
 			arch:        "amd64",
 			channel:     "version-not-found",
-			expected:    Graph{},
+		},
+		{
+			name:        "generates A->B->C graph derived from version 4.15.0-ec.1 but not including it",
+			baseVersion: semver.MustParse("4.15.0-ec.1"),
+			arch:        "amd64",
+			channel:     "version-not-found",
 		},
 	}
 
@@ -87,13 +91,7 @@ func TestServer_generateVersionNotFoundGraph(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			server := NewServer()
 			result := server.generateVersionNotFoundGraph(tt.baseVersion, tt.arch, tt.channel)
-
-			if len(result.Nodes) != 3 {
-				t.Errorf("expected 3 nodes, got %d", len(result.Nodes))
-			}
-			if len(result.Edges) != 2 {
-				t.Errorf("expected 2 edges, got %d", len(result.Edges))
-			}
+			testhelper.CompareWithFixture(t, result)
 		})
 	}
 }
