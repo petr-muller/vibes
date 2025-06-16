@@ -57,12 +57,13 @@ func (s *Server) handleGraph(w http.ResponseWriter, r *http.Request) {
 	case "version-not-found":
 		graph = s.generateVersionNotFoundGraph(parsedVersion, arch, channel)
 	default:
-		http.Error(w, fmt.Sprintf("Unsupported channel: %s", channel), http.StatusBadRequest)
-		return
+		graph = s.generateEmptyGraph()
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	if err := json.NewEncoder(w).Encode(graph); err != nil {
+	encoder := json.NewEncoder(w)
+	encoder.SetIndent("", "  ") // Pretty print the JSON response
+	if err := encoder.Encode(graph); err != nil {
 		http.Error(w, fmt.Sprintf("Failed to encode response: %v", err), http.StatusInternalServerError)
 		return
 	}
@@ -121,6 +122,14 @@ func (s *Server) generateVersionNotFoundGraph(baseVersion semver.Version, arch s
 			{0, 1}, // A -> B
 			{1, 2}, // B -> C
 		},
+		ConditionalEdges: []ConditionalEdge{},
+	}
+}
+
+func (s *Server) generateEmptyGraph() Graph {
+	return Graph{
+		Nodes:            []Node{},
+		Edges:            []Edge{},
 		ConditionalEdges: []ConditionalEdge{},
 	}
 }
