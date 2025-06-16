@@ -2,7 +2,6 @@ apiVersion: template.openshift.io/v1
 kind: Template
 metadata:
   name: fauxinnati-deployment
-  namespace: fauxinnati
 parameters:
 - name: IMAGE_DIGEST
   description: "Digest-tagged container image for fauxinnati"
@@ -13,7 +12,6 @@ objects:
   kind: Deployment
   metadata:
     name: fauxinnati
-    namespace: fauxinnati
     labels:
       app: fauxinnati
   spec:
