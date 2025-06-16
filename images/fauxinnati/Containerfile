@@ -22,13 +22,11 @@ FROM docker.io/library/alpine:latest
 # Install ca-certificates for HTTPS calls
 RUN apk --no-cache add ca-certificates
 
-WORKDIR /root/
-
 # Copy the binary from builder stage
-COPY --from=builder /app/fauxinnati .
+COPY --from=builder /app/fauxinnati /usr/local/bin/fauxinnati
 
 # Expose port 8080
 EXPOSE 8080
 
 # Run the binary
-CMD ["./fauxinnati"]
+ENTRYPOINT ["/usr/local/bin/fauxinnati"]
