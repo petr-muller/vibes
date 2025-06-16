@@ -127,6 +127,18 @@ func TestServer_setupRoutes(t *testing.T) {
 			method:         "GET",
 			expectedStatus: 400,
 		},
+		{
+			name:           "healthz endpoint exists",
+			path:           "/healthz",
+			method:         "GET",
+			expectedStatus: 200,
+		},
+		{
+			name:           "readyz endpoint exists",
+			path:           "/readyz",
+			method:         "GET",
+			expectedStatus: 200,
+		},
 	}
 
 	for _, tt := range tests {

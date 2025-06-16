@@ -22,6 +22,8 @@ func NewServer() *Server {
 
 func (s *Server) setupRoutes() {
 	s.mux.HandleFunc("/api/upgrades_info/graph", s.handleGraph)
+	s.mux.HandleFunc("/healthz", s.handleHealthz)
+	s.mux.HandleFunc("/readyz", s.handleReadyz)
 }
 
 func (s *Server) Start(port int) error {
@@ -132,4 +134,56 @@ func (s *Server) generateEmptyGraph() Graph {
 		Edges:            []Edge{},
 		ConditionalEdges: []ConditionalEdge{},
 	}
+}
+
+func (s *Server) handleHealthz(w http.ResponseWriter, r *http.Request) {
+	s.healthCheck(w, r)
+}
+
+func (s *Server) handleReadyz(w http.ResponseWriter, r *http.Request) {
+	s.healthCheck(w, r)
+}
+
+func (s *Server) healthCheck(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	req := r.Clone(r.Context())
+	req.URL.Path = "/api/upgrades_info/graph"
+	req.URL.RawQuery = "channel=stable-4.17&version=4.17.0"
+
+	rec := &healthResponseRecorder{
+		statusCode: http.StatusOK,
+		headers:    make(http.Header),
+	}
+
+	s.handleGraph(rec, req)
+
+	if rec.statusCode != http.StatusOK {
+		http.Error(w, "Service unavailable", http.StatusServiceUnavailable)
+		return
+	}
+
+	w.Header().Set("Content-Type", "text/plain")
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte("OK"))
+}
+
+type healthResponseRecorder struct {
+	statusCode int
+	headers    http.Header
+}
+
+func (h *healthResponseRecorder) Header() http.Header {
+	return h.headers
+}
+
+func (h *healthResponseRecorder) Write([]byte) (int, error) {
+	return 0, nil
+}
+
+func (h *healthResponseRecorder) WriteHeader(statusCode int) {
+	h.statusCode = statusCode
 }
