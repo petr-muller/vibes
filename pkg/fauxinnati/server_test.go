@@ -96,18 +96,36 @@ func TestServer_generateVersionNotFoundGraph(t *testing.T) {
 	}
 }
 
-func TestServer_setupRoutes(t *testing.T) {
+func TestServer_generateEmptyGraph(t *testing.T) {
 	tests := []struct {
-		name     string
-		path     string
-		method   string
-		hasRoute bool
+		name string
 	}{
 		{
-			name:     "graph endpoint exists",
-			path:     "/api/upgrades_info/graph",
-			method:   "GET",
-			hasRoute: true,
+			name: "generates empty graph",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			server := NewServer()
+			result := server.generateEmptyGraph()
+			testhelper.CompareWithFixture(t, result)
+		})
+	}
+}
+
+func TestServer_setupRoutes(t *testing.T) {
+	tests := []struct {
+		name           string
+		path           string
+		method         string
+		expectedStatus int
+	}{
+		{
+			name:           "graph endpoint exists",
+			path:           "/api/upgrades_info/graph",
+			method:         "GET",
+			expectedStatus: 400,
 		},
 	}
 
@@ -120,8 +138,8 @@ func TestServer_setupRoutes(t *testing.T) {
 			server.mux.ServeHTTP(w, req)
 
 			result := w.Result()
-			if tt.hasRoute && result.StatusCode == 404 {
-				t.Errorf("expected route to exist, got 404")
+			if result.StatusCode != tt.expectedStatus {
+				t.Fatalf("expected status %d, got %d", tt.expectedStatus, result.StatusCode)
 			}
 		})
 	}
