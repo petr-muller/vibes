@@ -1,0 +1,53 @@
+apiVersion: template.openshift.io/v1
+kind: Template
+metadata:
+  name: fauxinnati-deployment
+  namespace: fauxinnati
+parameters:
+- name: IMAGE_DIGEST
+  description: "Digest-tagged container image for fauxinnati"
+  required: true
+  value: "quay.io/petr-muller/fauxinnati:latest"
+objects:
+- apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    name: fauxinnati
+    namespace: fauxinnati
+    labels:
+      app: fauxinnati
+  spec:
+    replicas: 1
+    selector:
+      matchLabels:
+        app: fauxinnati
+    template:
+      metadata:
+        labels:
+          app: fauxinnati
+      spec:
+        containers:
+        - name: fauxinnati
+          image: ${IMAGE_DIGEST}
+          ports:
+          - containerPort: 8080
+            protocol: TCP
+          resources:
+            requests:
+              memory: "64Mi"
+              cpu: "50m"
+            limits:
+              memory: "128Mi"
+              cpu: "100m"
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 30
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 10

@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: fauxinnati
+  namespace: fauxinnati
+  labels:
+    app: fauxinnati
+spec:
+  selector:
+    app: fauxinnati
+  ports:
+  - port: 8080
+    targetPort: 8080
+    protocol: TCP

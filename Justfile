@@ -54,3 +54,27 @@ publish: images
     echo "Successfully published:"
     echo "  ${image_name}:${tag}"
     echo "  ${image_name}:latest"
+
+# Deploy fauxinnati to OpenShift
+deploy-fauxinnati:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    
+    # Get git commit hash (first 8 characters)
+    git_sha=$(git rev-parse --short=8 HEAD)
+    
+    # Check if repository is dirty
+    if [[ -n $(git status --porcelain) ]]; then
+        tag="${git_sha}-dirty"
+    else
+        tag="${git_sha}"
+    fi
+    
+    image_digest="quay.io/petr-muller/fauxinnati:${tag}"
+    
+    echo "Deploying fauxinnati with image: ${image_digest}"
+    
+    oc apply -f deploy/fauxinnati/00-project.yaml
+    oc process -f deploy/fauxinnati/01-deployment.yaml --param IMAGE_DIGEST="${image_digest}" | oc apply -f -
+    oc apply -f deploy/fauxinnati/02-service.yaml
+    oc apply -f deploy/fauxinnati/03-route.yaml
