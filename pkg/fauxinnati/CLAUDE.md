@@ -93,3 +93,29 @@ Consider if the package needs:
 
 ## Protocol Compliance
 This package implements a subset of the Cincinnati protocol. For full protocol specification, refer to the upstream Cincinnati documentation.
+
+## Examples
+
+The expected client for this package is the CVO; a copy of its client code is available in the [./examples](./examples) directory:
+
+```
+examples/cvo-cincinnati-client.go
+```
+ 
+It was obtained with:
+
+```
+curl https://raw.githubusercontent.com/openshift/cluster-version-operator/refs/heads/main/pkg/cincinnati/cincinnati.go > examples/cvo-cincinnati-client.go
+```
+
+An example response from a production OSUS server is available in the [./examples](./examples) directory:
+
+```
+examples/candidate-4.20.json
+```
+
+It was obtained with:
+
+```
+curl https://api.integration.openshift.com/api/upgrades_info/v1/graph?channel=candidate-4.20 | jq > examples/candidate-4.20.json
+```
