@@ -74,5 +74,5 @@ Add specially formatted comments throughout the codebase, where appropriate, for
 
 ## Tools
 
-- **fauxinnati** - Mock Cincinnati update graph server (see cmd/fauxinnati/README.md and pkg/fauxinnati/README.md for details)
+- **fauxinnati** - Mock Cincinnati update graph server with comprehensive channel support including basic channels (version-not-found, channel-head, simple), risk-based channels (risks-always, risks-matching, risks-nonmatching), and a comprehensive smoke-test channel for testing graph features (see cmd/fauxinnati/README.md and pkg/fauxinnati/README.md for details)
 - **scripts** - Various utility scripts for OpenShift CI analysis
