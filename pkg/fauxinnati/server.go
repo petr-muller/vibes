@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"sort"
+	"strings"
 
 	"github.com/blang/semver/v4"
 )
@@ -168,7 +170,7 @@ func (s *Server) generateChannelHeadGraph(clientVersion semver.Version, arch str
 		Version: versionC,
 		Image:   fmt.Sprintf("quay.io/openshift-release-dev/ocp-release@sha256:%064x", versionC.Major*1000000+versionC.Minor*1000+versionC.Patch),
 		Metadata: map[string]string{
-			"io.openshift.upgrades.graph.release.channels":    channel,
+			"io.openshift.upgrades.graph.release.channels":    s.formatChannelsForMetadata(versionC),
 			"io.openshift.upgrades.graph.release.manifestref": fmt.Sprintf("sha256:%064x", versionC.Major*1000000+versionC.Minor*1000+versionC.Patch),
 			"url": fmt.Sprintf("https://access.redhat.com/errata/RHSA-2024:%05d", versionC.Major*1000+versionC.Minor*100+versionC.Patch),
 		},
@@ -196,6 +198,28 @@ func (s *Server) generateEmptyGraph() Graph {
 		Edges:            []Edge{},
 		ConditionalEdges: []ConditionalEdge{},
 	}
+}
+
+// AIDEV-NOTE: Helper to determine which channels contain the queried version
+// Currently only channel-head contains the queried version, but this will expand
+// as more channels are added that include the queried version in their graphs
+func (s *Server) getChannelsContainingVersion(version semver.Version) []string {
+	var channels []string
+	
+	// Only channel-head currently contains the queried version
+	channels = append(channels, "channel-head")
+	
+	// Future channels that contain the queried version will be added here
+	
+	return channels
+}
+
+// AIDEV-NOTE: Format channel list for metadata field
+// Returns comma-separated sorted list of channels containing the version
+func (s *Server) formatChannelsForMetadata(version semver.Version) string {
+	channels := s.getChannelsContainingVersion(version)
+	sort.Strings(channels) // Ensure consistent ordering
+	return strings.Join(channels, ",")
 }
 
 func (s *Server) handleHealthz(w http.ResponseWriter, r *http.Request) {
