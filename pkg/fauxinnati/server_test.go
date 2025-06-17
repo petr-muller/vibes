@@ -40,6 +40,12 @@ func TestServer_handleGraph(t *testing.T) {
 			url:            "/api/upgrades_info/graph?channel=version-not-found&version=4.20.0-ec.2&arch=amd64",
 			expectedStatus: 200,
 		},
+		{
+			name:           "GET channel-head channel returns 200 and a three-node graph with version 4.20.0-ec.2 as a channel head",
+			method:         "GET",
+			url:            "/api/upgrades_info/graph?channel=channel-head&version=4.20.0-ec.2&arch=amd64",
+			expectedStatus: 200,
+		},
 	}
 
 	for _, tt := range tests {
