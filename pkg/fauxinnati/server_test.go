@@ -162,6 +162,33 @@ func TestServer_handleGraph(t *testing.T) {
 				}
 			},
 		},
+		{
+			name:           "GET simple returns 200 and a three node graph with version 4.17.5 having to unconditional edges",
+			method:         "GET",
+			url:            "/api/upgrades_info/graph?channel=simple&version=4.17.5&arch=amd64",
+			expectedStatus: 200,
+			validateGraph: func(t *testing.T, graph Graph) {
+				v4175 := findVersion(graph, "4.17.5")
+				if v4175 == nil {
+					t.Errorf("expected version 4.17.5 to be in the graph, but it was not found")
+				}
+				if len(graph.Nodes) != 3 {
+					t.Errorf("expected 3 nodes in the graph, got %d", len(graph.Nodes))
+				}
+				if len(graph.Edges) != 2 {
+					t.Errorf("expected 2 edges in the graph, got %d", len(graph.Edges))
+				}
+				if len(graph.ConditionalEdges) != 0 {
+					t.Errorf("expected 0 conditional edges in the graph, got %d", len(graph.ConditionalEdges))
+				}
+				if diff := cmp.Diff([]string{}, edgesTo(graph, "4.17.5")); diff != "" {
+					t.Errorf("edges to 4.17.5 mismatch (-want +got):\n%s", diff)
+				}
+				if diff := cmp.Diff([]string{"4.17.6", "4.18.0"}, edgesFrom(graph, "4.17.5")); diff != "" {
+					t.Errorf("edges from 4.17.5 mismatch (-want +got):\n%s", diff)
+				}
+			},
+		},
 	}
 
 	for _, tt := range tests {
@@ -235,6 +262,50 @@ func TestServer_generateEmptyGraph(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			server := NewServer()
 			result := server.generateEmptyGraph()
+			testhelper.CompareWithFixture(t, result)
+		})
+	}
+}
+
+func TestServer_generateChannelHeadGraph(t *testing.T) {
+	tests := []struct {
+		name        string
+		baseVersion semver.Version
+		arch        string
+	}{
+		{
+			name:        "generates A->B->C graph with version 4.20.0-ec.2 as a channel head",
+			baseVersion: semver.MustParse("4.20.0-ec.2"),
+			arch:        "amd64",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			server := NewServer()
+			result := server.generateChannelHeadGraph(tt.baseVersion, tt.arch, "channel-head")
+			testhelper.CompareWithFixture(t, result)
+		})
+	}
+}
+
+func TestServer_generateSimpleGraph(t *testing.T) {
+	tests := []struct {
+		name        string
+		baseVersion semver.Version
+		arch        string
+	}{
+		{
+			name:        "generates A->B->C graph with version 4.17.5 having two unconditional edges",
+			baseVersion: semver.MustParse("4.17.5"),
+			arch:        "amd64",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			server := NewServer()
+			result := server.generateSimpleGraph(tt.baseVersion, tt.arch, "simple")
 			testhelper.CompareWithFixture(t, result)
 		})
 	}

@@ -1,0 +1,49 @@
+nodes:
+    - version:
+        major: 4
+        minor: 19
+        patch: 0
+        pre: []
+        build: []
+      image: quay.io/openshift-release-dev/ocp-release@sha256:00000000000000000000000000000000000000000000000000000000003d5338
+      metadata:
+        io.openshift.upgrades.graph.release.channels: channel-head
+        io.openshift.upgrades.graph.release.manifestref: sha256:00000000000000000000000000000000000000000000000000000000003d5338
+        release.openshift.io/architecture: amd64
+        url: https://access.redhat.com/errata/RHSA-2024:05900
+    - version:
+        major: 4
+        minor: 19
+        patch: 1
+        pre: []
+        build: []
+      image: quay.io/openshift-release-dev/ocp-release@sha256:00000000000000000000000000000000000000000000000000000000003d5339
+      metadata:
+        io.openshift.upgrades.graph.release.channels: channel-head
+        io.openshift.upgrades.graph.release.manifestref: sha256:00000000000000000000000000000000000000000000000000000000003d5339
+        release.openshift.io/architecture: amd64
+        url: https://access.redhat.com/errata/RHSA-2024:05901
+    - version:
+        major: 4
+        minor: 20
+        patch: 0
+        pre:
+            - versionstr: ec
+              versionnum: 0
+              isnum: false
+            - versionstr: ""
+              versionnum: 2
+              isnum: true
+        build: []
+      image: quay.io/openshift-release-dev/ocp-release@sha256:00000000000000000000000000000000000000000000000000000000003d5720
+      metadata:
+        io.openshift.upgrades.graph.release.channels: channel-head,simple
+        io.openshift.upgrades.graph.release.manifestref: sha256:00000000000000000000000000000000000000000000000000000000003d5720
+        release.openshift.io/architecture: amd64
+        url: https://access.redhat.com/errata/RHSA-2024:06000
+edges:
+    - - 0
+      - 1
+    - - 1
+      - 2
+conditionaledges: []
