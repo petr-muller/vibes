@@ -46,14 +46,14 @@ func TestServer_Integration(t *testing.T) {
 			expectedStatus: 200,
 		},
 		{
-			name:           "successful graph request: always-risks channel",
-			url:            "/api/upgrades_info/graph?channel=always-risks&version=4.17.5",
+			name:           "successful graph request: risks-always channel",
+			url:            "/api/upgrades_info/graph?channel=risks-always&version=4.17.5",
 			headers:        map[string]string{"Accept": "application/json"},
 			expectedStatus: 200,
 		},
 		{
-			name:           "successful graph request: matching-risks channel",
-			url:            "/api/upgrades_info/graph?channel=matching-risks&version=4.17.5",
+			name:           "successful graph request: risks-matching channel",
+			url:            "/api/upgrades_info/graph?channel=risks-matching&version=4.17.5",
 			headers:        map[string]string{"Accept": "application/json"},
 			expectedStatus: 200,
 		},

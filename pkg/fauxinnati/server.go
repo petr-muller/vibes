@@ -64,10 +64,10 @@ func (s *Server) handleGraph(w http.ResponseWriter, r *http.Request) {
 		graph = s.generateChannelHeadGraph(parsedVersion, arch, channel)
 	case "simple":
 		graph = s.generateSimpleGraph(parsedVersion, arch, channel)
-	case "always-risks":
-		graph = s.generateAlwaysRisksGraph(parsedVersion, arch, channel)
-	case "matching-risks":
-		graph = s.generateMatchingRisksGraph(parsedVersion, arch, channel)
+	case "risks-always":
+		graph = s.generateRisksAlwaysGraph(parsedVersion, arch, channel)
+	case "risks-matching":
+		graph = s.generateRisksMatchingGraph(parsedVersion, arch, channel)
 	default:
 		graph = s.generateEmptyGraph()
 	}
@@ -259,7 +259,7 @@ func (s *Server) generateSimpleGraph(queriedVersion semver.Version, arch string,
 	}
 }
 
-func (s *Server) generateAlwaysRisksGraph(queriedVersion semver.Version, arch string, channel string) Graph {
+func (s *Server) generateRisksAlwaysGraph(queriedVersion semver.Version, arch string, channel string) Graph {
 	// A is the queried version
 	versionA := queriedVersion
 
@@ -345,7 +345,7 @@ func (s *Server) generateAlwaysRisksGraph(queriedVersion semver.Version, arch st
 	}
 }
 
-func (s *Server) generateMatchingRisksGraph(queriedVersion semver.Version, arch string, channel string) Graph {
+func (s *Server) generateRisksMatchingGraph(queriedVersion semver.Version, arch string, channel string) Graph {
 	// A is the queried version
 	versionA := queriedVersion
 
@@ -443,15 +443,15 @@ func (s *Server) generateEmptyGraph() Graph {
 }
 
 // AIDEV-NOTE: Helper to determine which channels contain the queried version
-// Currently channel-head, simple, always-risks, and matching-risks contain the queried version, but this will expand
+// Currently channel-head, simple, risks-always, and risks-matching contain the queried version, but this will expand
 // as more channels are added that include the queried version in their graphs
 func (s *Server) getChannelsContainingVersion(version semver.Version) []string {
 	var channels []string
 	
 	// Channels that contain the queried version
-	channels = append(channels, "always-risks")
 	channels = append(channels, "channel-head")
-	channels = append(channels, "matching-risks")
+	channels = append(channels, "risks-always")
+	channels = append(channels, "risks-matching")
 	channels = append(channels, "simple")
 	
 	// Future channels that contain the queried version will be added here

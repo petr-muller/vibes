@@ -7,7 +7,7 @@ nodes:
         build: []
       image: quay.io/openshift-release-dev/ocp-release@sha256:00000000000000000000000000000000000000000000000000000000003d4b6d
       metadata:
-        io.openshift.upgrades.graph.release.channels: always-risks,channel-head,matching-risks,simple
+        io.openshift.upgrades.graph.release.channels: channel-head,risks-always,risks-matching,simple
         io.openshift.upgrades.graph.release.manifestref: sha256:00000000000000000000000000000000000000000000000000000000003d4b6d
         release.openshift.io/architecture: amd64
         url: https://access.redhat.com/errata/RHSA-2024:05705

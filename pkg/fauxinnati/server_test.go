@@ -234,9 +234,9 @@ func TestServer_handleGraph(t *testing.T) {
 			},
 		},
 		{
-			name:           "GET always-risks returns 200 and a three node graph with version 4.17.5 having two conditional risk edges with always",
+			name:           "GET risks-always returns 200 and a three node graph with version 4.17.5 having two conditional risk edges with always",
 			method:         "GET",
-			url:            "/api/upgrades_info/graph?channel=always-risks&version=4.17.5&arch=amd64",
+			url:            "/api/upgrades_info/graph?channel=risks-always&version=4.17.5&arch=amd64",
 			expectedStatus: 200,
 			validateGraph: func(t *testing.T, graph Graph) {
 				v4175 := findVersion(graph, "4.17.5")
@@ -258,9 +258,9 @@ func TestServer_handleGraph(t *testing.T) {
 			},
 		},
 		{
-			name:           "GET matching-risks returns 200 and a three node graph with version 4.17.5 having two conditional risk edges with promql matching rules",
+			name:           "GET risks-matching returns 200 and a three node graph with version 4.17.5 having two conditional risk edges with promql matching rules",
 			method:         "GET",
-			url:            "/api/upgrades_info/graph?channel=matching-risks&version=4.17.5&arch=amd64",
+			url:            "/api/upgrades_info/graph?channel=risks-matching&version=4.17.5&arch=amd64",
 			expectedStatus: 200,
 			validateGraph: func(t *testing.T, graph Graph) {
 				v4175 := findVersion(graph, "4.17.5")
@@ -403,7 +403,7 @@ func TestServer_generateSimpleGraph(t *testing.T) {
 	}
 }
 
-func TestServer_generateAlwaysRisksGraph(t *testing.T) {
+func TestServer_generateRisksAlwaysGraph(t *testing.T) {
 	tests := []struct {
 		name        string
 		baseVersion semver.Version
@@ -419,13 +419,13 @@ func TestServer_generateAlwaysRisksGraph(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			server := NewServer()
-			result := server.generateAlwaysRisksGraph(tt.baseVersion, tt.arch, "always-risks")
+			result := server.generateRisksAlwaysGraph(tt.baseVersion, tt.arch, "risks-always")
 			testhelper.CompareWithFixture(t, result)
 		})
 	}
 }
 
-func TestServer_generateMatchingRisksGraph(t *testing.T) {
+func TestServer_generateRisksMatchingGraph(t *testing.T) {
 	tests := []struct {
 		name        string
 		baseVersion semver.Version
@@ -441,7 +441,7 @@ func TestServer_generateMatchingRisksGraph(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			server := NewServer()
-			result := server.generateMatchingRisksGraph(tt.baseVersion, tt.arch, "matching-risks")
+			result := server.generateRisksMatchingGraph(tt.baseVersion, tt.arch, "risks-matching")
 			testhelper.CompareWithFixture(t, result)
 		})
 	}

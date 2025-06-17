@@ -4,7 +4,7 @@
       "version": "4.17.5",
       "payload": "quay.io/openshift-release-dev/ocp-release@sha256:00000000000000000000000000000000000000000000000000000000003d4b6d",
       "metadata": {
-        "io.openshift.upgrades.graph.release.channels": "always-risks,channel-head,matching-risks,simple",
+        "io.openshift.upgrades.graph.release.channels": "channel-head,risks-always,risks-matching,simple",
         "io.openshift.upgrades.graph.release.manifestref": "sha256:00000000000000000000000000000000000000000000000000000000003d4b6d",
         "url": "https://access.redhat.com/errata/RHSA-2024:05705"
       }
@@ -13,7 +13,7 @@
       "version": "4.17.6",
       "payload": "quay.io/openshift-release-dev/ocp-release@sha256:00000000000000000000000000000000000000000000000000000000003d4b6e",
       "metadata": {
-        "io.openshift.upgrades.graph.release.channels": "matching-risks",
+        "io.openshift.upgrades.graph.release.channels": "risks-matching",
         "io.openshift.upgrades.graph.release.manifestref": "sha256:00000000000000000000000000000000000000000000000000000000003d4b6e",
         "url": "https://access.redhat.com/errata/RHSA-2024:05706"
       }
@@ -22,7 +22,7 @@
       "version": "4.18.0",
       "payload": "quay.io/openshift-release-dev/ocp-release@sha256:00000000000000000000000000000000000000000000000000000000003d4f50",
       "metadata": {
-        "io.openshift.upgrades.graph.release.channels": "matching-risks",
+        "io.openshift.upgrades.graph.release.channels": "risks-matching",
         "io.openshift.upgrades.graph.release.manifestref": "sha256:00000000000000000000000000000000000000000000000000000000003d4f50",
         "url": "https://access.redhat.com/errata/RHSA-2024:05800"
       }
