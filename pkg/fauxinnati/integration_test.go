@@ -63,6 +63,12 @@ func TestServer_Integration(t *testing.T) {
 			headers:        map[string]string{"Accept": "application/json"},
 			expectedStatus: 200,
 		},
+		{
+			name:           "successful graph request: smoke-test channel",
+			url:            "/api/upgrades_info/graph?channel=smoke-test&version=4.17.5",
+			headers:        map[string]string{"Accept": "application/json"},
+			expectedStatus: 200,
+		},
 	}
 
 	for _, tt := range tests {

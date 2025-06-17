@@ -305,6 +305,51 @@ func TestServer_handleGraph(t *testing.T) {
 				}
 			},
 		},
+		{
+			name:           "GET smoke-test returns 200 and a graph that exercises most/all graph features",
+			method:         "GET",
+			url:            "/api/upgrades_info/graph?channel=smoke-test&version=4.17.5&arch=amd64",
+			expectedStatus: 200,
+			validateGraph: func(t *testing.T, graph Graph) {
+				v4175 := findVersion(graph, "4.17.5")
+				if v4175 == nil {
+					t.Errorf("expected version 4.17.5 to be in the graph, but it was not found")
+				}
+				if len(graph.Nodes) != 13 {
+					t.Errorf("expected 13 nodes in the graph, got %d", len(graph.Nodes))
+				}
+				if len(graph.Edges) != 4 {
+					t.Errorf("expected 4 edges in the graph, got %d", len(graph.Edges))
+				}
+				if len(graph.ConditionalEdges) != 4 {
+					t.Errorf("expected 3 conditional edges in the graph, got %d", len(graph.ConditionalEdges))
+				}
+				if diff := cmp.Diff([]string{"4.16.0"}, edgesTo(graph, "4.17.5")); diff != "" {
+					t.Errorf("edges to 4.17.5 mismatch (-want +got):\n%s", diff)
+				}
+				if diff := cmp.Diff([]string{"4.16.0"}, edgesTo(graph, "4.16.1")); diff != "" {
+					t.Errorf("edges to 4.16.1 mismatch (-want +got):\n%s", diff)
+				}
+				if diff := cmp.Diff([]string{"4.17.6", "4.18.0"}, edgesFrom(graph, "4.17.5")); diff != "" {
+					t.Errorf("edges from 4.17.5 mismatch (-want +got):\n%s", diff)
+				}
+				conditionals := []string{
+					"4.17.7(RiskA:Always)",
+					"4.17.8(RiskBMatches:PromQL)",
+					"4.17.9(RiskCNoMatch:PromQL)",
+					"4.17.10(RiskA:Always|RiskBMatches:PromQL|RiskCNoMatch:PromQL)",
+					"4.18.1(RiskA:Always)",
+					"4.18.2(RiskBMatches:PromQL)",
+					"4.18.3(RiskCNoMatch:PromQL)",
+					"4.18.4(RiskA:Always|RiskBMatches:PromQL|RiskCNoMatch:PromQL)",
+				}
+				// the test sorts the output to make the test deterministic, but it is not smart to handle semvers
+				sort.Strings(conditionals)
+				if diff := cmp.Diff(conditionals, conditionalEdgesFrom(graph, "4.17.5")); diff != "" {
+					t.Errorf("conditional edges from 4.17.5 mismatch (-want +got):\n%s", diff)
+				}
+			},
+		},
 	}
 
 	for _, tt := range tests {
@@ -488,6 +533,28 @@ func TestServer_generateRisksNonmatchingGraph(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			server := NewServer()
 			result := server.generateRisksNonmatchingGraph(tt.baseVersion, tt.arch, "risks-nonmatching")
+			testhelper.CompareWithFixture(t, result)
+		})
+	}
+}
+
+func TestServer_generateSmokeTestGraph(t *testing.T) {
+	tests := []struct {
+		name        string
+		baseVersion semver.Version
+		arch        string
+	}{
+		{
+			name:        "generates a graph that exercises various graph features",
+			baseVersion: semver.MustParse("4.17.5"),
+			arch:        "amd64",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			server := NewServer()
+			result := server.generateSmokeTestGraph(tt.baseVersion, tt.arch, "smoke-test")
 			testhelper.CompareWithFixture(t, result)
 		})
 	}
