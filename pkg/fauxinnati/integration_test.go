@@ -15,7 +15,6 @@ func TestServer_Integration(t *testing.T) {
 		url            string
 		headers        map[string]string
 		expectedStatus int
-		expectedType   string
 		validateBody   func(t *testing.T, body []byte)
 	}{
 		{
@@ -24,7 +23,6 @@ func TestServer_Integration(t *testing.T) {
 			url:            "/api/upgrades_info/graph?channel=version-not-found&version=4.17.5",
 			headers:        map[string]string{"Accept": "application/json"},
 			expectedStatus: 200,
-			expectedType:   "application/json",
 			validateBody:   nil,
 		},
 	}

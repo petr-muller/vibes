@@ -58,6 +58,8 @@ func (s *Server) handleGraph(w http.ResponseWriter, r *http.Request) {
 	switch channel {
 	case "version-not-found":
 		graph = s.generateVersionNotFoundGraph(parsedVersion, arch, channel)
+	case "channel-head":
+		graph = s.generateChannelHeadGraph(parsedVersion, arch, channel)
 	default:
 		graph = s.generateEmptyGraph()
 	}
@@ -81,6 +83,66 @@ func (s *Server) generateVersionNotFoundGraph(baseVersion semver.Version, arch s
 
 	versionC := versionA
 	versionC.Patch = 2
+
+	nodeA := Node{
+		Version: versionA,
+		Image:   fmt.Sprintf("quay.io/openshift-release-dev/ocp-release@sha256:%064x", versionA.Major*1000000+versionA.Minor*1000+versionA.Patch),
+		Metadata: map[string]string{
+			"io.openshift.upgrades.graph.release.channels":    channel,
+			"io.openshift.upgrades.graph.release.manifestref": fmt.Sprintf("sha256:%064x", versionA.Major*1000000+versionA.Minor*1000+versionA.Patch),
+			"url": fmt.Sprintf("https://access.redhat.com/errata/RHSA-2024:%05d", versionA.Major*1000+versionA.Minor*100+versionA.Patch),
+		},
+	}
+
+	nodeB := Node{
+		Version: versionB,
+		Image:   fmt.Sprintf("quay.io/openshift-release-dev/ocp-release@sha256:%064x", versionB.Major*1000000+versionB.Minor*1000+versionB.Patch),
+		Metadata: map[string]string{
+			"io.openshift.upgrades.graph.release.channels":    channel,
+			"io.openshift.upgrades.graph.release.manifestref": fmt.Sprintf("sha256:%064x", versionB.Major*1000000+versionB.Minor*1000+versionB.Patch),
+			"url": fmt.Sprintf("https://access.redhat.com/errata/RHSA-2024:%05d", versionB.Major*1000+versionB.Minor*100+versionB.Patch),
+		},
+	}
+
+	nodeC := Node{
+		Version: versionC,
+		Image:   fmt.Sprintf("quay.io/openshift-release-dev/ocp-release@sha256:%064x", versionC.Major*1000000+versionC.Minor*1000+versionC.Patch),
+		Metadata: map[string]string{
+			"io.openshift.upgrades.graph.release.channels":    channel,
+			"io.openshift.upgrades.graph.release.manifestref": fmt.Sprintf("sha256:%064x", versionC.Major*1000000+versionC.Minor*1000+versionC.Patch),
+			"url": fmt.Sprintf("https://access.redhat.com/errata/RHSA-2024:%05d", versionC.Major*1000+versionC.Minor*100+versionC.Patch),
+		},
+	}
+
+	if arch != "" {
+		nodeA.Metadata["release.openshift.io/architecture"] = arch
+		nodeB.Metadata["release.openshift.io/architecture"] = arch
+		nodeC.Metadata["release.openshift.io/architecture"] = arch
+	}
+
+	return Graph{
+		Nodes: []Node{nodeA, nodeB, nodeC},
+		Edges: []Edge{
+			{0, 1}, // A -> B
+			{1, 2}, // B -> C
+		},
+		ConditionalEdges: []ConditionalEdge{},
+	}
+}
+
+func (s *Server) generateChannelHeadGraph(clientVersion semver.Version, arch string, channel string) Graph {
+	// Client version is the head (node C)
+	versionC := clientVersion
+
+	// Node A: Previous minor version with patch 0
+	versionA := clientVersion
+	versionA.Minor--
+	versionA.Patch = 0
+	versionA.Pre = nil // Clear prerelease
+
+	// Node B: Previous minor version with patch 1  
+	versionB := versionA
+	versionB.Patch = 1
 
 	nodeA := Node{
 		Version: versionA,
