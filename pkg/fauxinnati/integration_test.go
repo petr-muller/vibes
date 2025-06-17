@@ -45,6 +45,12 @@ func TestServer_Integration(t *testing.T) {
 			headers:        map[string]string{"Accept": "application/json"},
 			expectedStatus: 200,
 		},
+		{
+			name:           "successful graph request: always-risks channel",
+			url:            "/api/upgrades_info/graph?channel=always-risks&version=4.17.5",
+			headers:        map[string]string{"Accept": "application/json"},
+			expectedStatus: 200,
+		},
 	}
 
 	for _, tt := range tests {

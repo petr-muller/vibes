@@ -2,9 +2,13 @@ package fauxinnati
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
+	"maps"
 	"net/http/httptest"
+	"slices"
 	"sort"
+	"strings"
 	"testing"
 
 	"github.com/blang/semver/v4"
@@ -57,6 +61,46 @@ func edgesFrom(graph Graph, version string) []string {
 	}
 
 	return toStrings(targetSemVers)
+}
+
+func conditionalEdgesTo(graph Graph, version string) []string {
+	edges := map[string][]ConditionalUpdateRisk{}
+
+	for _, edgeItem := range graph.ConditionalEdges {
+		for _, edge := range edgeItem.Edges {
+			if edge.To == version {
+				edges[edge.From] = append(edges[edge.From], edgeItem.Risks...)
+			}
+		}
+	}
+
+	return toStringsWithRisks(edges)
+}
+
+func conditionalEdgesFrom(graph Graph, version string) []string {
+	edges := map[string][]ConditionalUpdateRisk{}
+
+	for _, edgeItem := range graph.ConditionalEdges {
+		for _, edge := range edgeItem.Edges {
+			if edge.From == version {
+				edges[edge.To] = append(edges[edge.To], edgeItem.Risks...)
+			}
+		}
+	}
+
+	return toStringsWithRisks(edges)
+}
+
+func toStringsWithRisks(edges map[string][]ConditionalUpdateRisk) []string {
+	var edgesStrings []string
+	for _, version := range slices.Sorted(maps.Keys(edges)) {
+		var risks []string
+		for _, risk := range edges[version] {
+			risks = append(risks, fmt.Sprintf("%s:%s", risk.Name, risk.MatchingRules[0].Type))
+		}
+		edgesStrings = append(edgesStrings, fmt.Sprintf("%s(%s)", version, strings.Join(risks, "|")))
+	}
+	return edgesStrings
 }
 
 func toStrings(targetSemVers []semver.Version) []string {
@@ -189,6 +233,30 @@ func TestServer_handleGraph(t *testing.T) {
 				}
 			},
 		},
+		{
+			name:           "GET always-risks returns 200 and a three node graph with version 4.17.5 having two conditional risk edges with always",
+			method:         "GET",
+			url:            "/api/upgrades_info/graph?channel=always-risks&version=4.17.5&arch=amd64",
+			expectedStatus: 200,
+			validateGraph: func(t *testing.T, graph Graph) {
+				v4175 := findVersion(graph, "4.17.5")
+				if v4175 == nil {
+					t.Errorf("expected version 4.17.5 to be in the graph, but it was not found")
+				}
+				if len(graph.Nodes) != 3 {
+					t.Errorf("expected 3 nodes in the graph, got %d", len(graph.Nodes))
+				}
+				if len(graph.Edges) != 0 {
+					t.Errorf("expected 0 edges in the graph, got %d", len(graph.Edges))
+				}
+				if len(graph.ConditionalEdges) != 1 {
+					t.Errorf("expected 1 conditional edge in the graph, got %d", len(graph.ConditionalEdges))
+				}
+				if diff := cmp.Diff([]string{"4.17.6(SyntheticRisk:Always)", "4.18.0(SyntheticRisk:Always)"}, conditionalEdgesFrom(graph, "4.17.5")); diff != "" {
+					t.Errorf("conditional edges from 4.17.5 mismatch (-want +got):\n%s", diff)
+				}
+			},
+		},
 	}
 
 	for _, tt := range tests {
@@ -306,6 +374,28 @@ func TestServer_generateSimpleGraph(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			server := NewServer()
 			result := server.generateSimpleGraph(tt.baseVersion, tt.arch, "simple")
+			testhelper.CompareWithFixture(t, result)
+		})
+	}
+}
+
+func TestServer_generateAlwaysRisksGraph(t *testing.T) {
+	tests := []struct {
+		name        string
+		baseVersion semver.Version
+		arch        string
+	}{
+		{
+			name:        "generates A->B->C graph with version 4.17.5 having two conditional risk edges with always",
+			baseVersion: semver.MustParse("4.17.5"),
+			arch:        "amd64",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			server := NewServer()
+			result := server.generateAlwaysRisksGraph(tt.baseVersion, tt.arch, "always-risks")
 			testhelper.CompareWithFixture(t, result)
 		})
 	}
