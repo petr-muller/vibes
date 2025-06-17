@@ -19,7 +19,7 @@ nodes:
         build: []
       image: quay.io/openshift-release-dev/ocp-release@sha256:00000000000000000000000000000000000000000000000000000000003d4b6e
       metadata:
-        io.openshift.upgrades.graph.release.channels: risks-always
+        io.openshift.upgrades.graph.release.channels: risks-nonmatching
         io.openshift.upgrades.graph.release.manifestref: sha256:00000000000000000000000000000000000000000000000000000000003d4b6e
         release.openshift.io/architecture: amd64
         url: https://access.redhat.com/errata/RHSA-2024:05706
@@ -31,7 +31,7 @@ nodes:
         build: []
       image: quay.io/openshift-release-dev/ocp-release@sha256:00000000000000000000000000000000000000000000000000000000003d4f50
       metadata:
-        io.openshift.upgrades.graph.release.channels: risks-always
+        io.openshift.upgrades.graph.release.channels: risks-nonmatching
         io.openshift.upgrades.graph.release.manifestref: sha256:00000000000000000000000000000000000000000000000000000000003d4f50
         release.openshift.io/architecture: amd64
         url: https://access.redhat.com/errata/RHSA-2024:05800
@@ -43,9 +43,10 @@ conditionaledges:
         - from: 4.17.5
           to: 4.18.0
       risks:
-        - url: https://docs.openshift.com/synthetic-risk
+        - url: https://docs.openshift.com/synthetic-risk-promql-nonmatching
           name: SyntheticRisk
-          message: This is a synthetic risk that always applies for testing purposes
+          message: This is a synthetic risk with PromQL that never matches in OpenShift clusters
           matchingrules:
-            - type: Always
-              promql: null
+            - type: PromQL
+              promql:
+                promql: vector(0)
