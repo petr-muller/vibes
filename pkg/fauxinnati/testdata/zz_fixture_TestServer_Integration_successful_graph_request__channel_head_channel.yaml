@@ -1,0 +1,42 @@
+{
+  "nodes": [
+    {
+      "version": "4.16.0",
+      "payload": "quay.io/openshift-release-dev/ocp-release@sha256:00000000000000000000000000000000000000000000000000000000003d4780",
+      "metadata": {
+        "io.openshift.upgrades.graph.release.channels": "channel-head",
+        "io.openshift.upgrades.graph.release.manifestref": "sha256:00000000000000000000000000000000000000000000000000000000003d4780",
+        "url": "https://access.redhat.com/errata/RHSA-2024:05600"
+      }
+    },
+    {
+      "version": "4.16.1",
+      "payload": "quay.io/openshift-release-dev/ocp-release@sha256:00000000000000000000000000000000000000000000000000000000003d4781",
+      "metadata": {
+        "io.openshift.upgrades.graph.release.channels": "channel-head",
+        "io.openshift.upgrades.graph.release.manifestref": "sha256:00000000000000000000000000000000000000000000000000000000003d4781",
+        "url": "https://access.redhat.com/errata/RHSA-2024:05601"
+      }
+    },
+    {
+      "version": "4.17.5",
+      "payload": "quay.io/openshift-release-dev/ocp-release@sha256:00000000000000000000000000000000000000000000000000000000003d4b6d",
+      "metadata": {
+        "io.openshift.upgrades.graph.release.channels": "channel-head",
+        "io.openshift.upgrades.graph.release.manifestref": "sha256:00000000000000000000000000000000000000000000000000000000003d4b6d",
+        "url": "https://access.redhat.com/errata/RHSA-2024:05705"
+      }
+    }
+  ],
+  "edges": [
+    [
+      0,
+      1
+    ],
+    [
+      1,
+      2
+    ]
+  ],
+  "conditionalEdges": []
+}

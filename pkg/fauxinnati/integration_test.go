@@ -1,11 +1,14 @@
 package fauxinnati
 
 import (
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"sync"
 	"sync/atomic"
 	"testing"
+
+	"github.com/petr-muller/vibes/pkg/testhelper"
 )
 
 func TestServer_Integration(t *testing.T) {
@@ -15,15 +18,26 @@ func TestServer_Integration(t *testing.T) {
 		url            string
 		headers        map[string]string
 		expectedStatus int
-		validateBody   func(t *testing.T, body []byte)
 	}{
 		{
-			name:           "successful graph request",
+			name:           "successful graph request: any-unknown-channel channel",
+			method:         "GET",
+			url:            "/api/upgrades_info/graph?channel=any-unknown-channel&version=4.17.5",
+			headers:        map[string]string{"Accept": "application/json"},
+			expectedStatus: 200,
+		},
+		{
+			name:           "successful graph request: version-not-found channel",
 			method:         "GET",
 			url:            "/api/upgrades_info/graph?channel=version-not-found&version=4.17.5",
 			headers:        map[string]string{"Accept": "application/json"},
 			expectedStatus: 200,
-			validateBody:   nil,
+		},
+		{
+			name:           "successful graph request: channel-head channel",
+			url:            "/api/upgrades_info/graph?channel=channel-head&version=4.17.5",
+			headers:        map[string]string{"Accept": "application/json"},
+			expectedStatus: 200,
 		},
 	}
 
@@ -47,10 +61,20 @@ func TestServer_Integration(t *testing.T) {
 			if err != nil {
 				t.Fatalf("Failed to make request: %v", err)
 			}
-			defer resp.Body.Close()
+			defer func(Body io.ReadCloser) {
+				_ = Body.Close()
+			}(resp.Body)
 
 			if resp.StatusCode != tt.expectedStatus {
 				t.Errorf("expected status %d, got %d", tt.expectedStatus, resp.StatusCode)
+			}
+
+			if tt.expectedStatus == 200 {
+				body, err := io.ReadAll(resp.Body)
+				if err != nil {
+					t.Fatalf("Failed to read response body: %v", err)
+				}
+				testhelper.CompareWithFixture(t, body)
 			}
 		})
 	}
@@ -98,7 +122,7 @@ func TestServer_FullWorkflow(t *testing.T) {
 				if err != nil {
 					t.Fatalf("Step %d: Failed to make request: %v", i, err)
 				}
-				resp.Body.Close()
+				_ = resp.Body.Close()
 
 				if resp.StatusCode != step.expectedStatus {
 					t.Errorf("Step %d: expected status %d, got %d", i, step.expectedStatus, resp.StatusCode)
@@ -141,14 +165,14 @@ func TestServer_ConcurrentRequests(t *testing.T) {
 							successCount.Add(1)
 						}
 						if resp != nil {
-							resp.Body.Close()
+							_ = resp.Body.Close()
 						}
 					}
 				}()
 			}
 			wg.Wait()
-			if successCount.Load() < int64(tt.numGoroutines*tt.requestsPerGoro) {
-				t.Errorf("Expected at least %d successful requests, got %d", tt.numGoroutines*tt.requestsPerGoro, successCount)
+			if actual := successCount.Load(); actual < int64(tt.numGoroutines*tt.requestsPerGoro) {
+				t.Errorf("Expected at least %d successful requests, got %d", tt.numGoroutines*tt.requestsPerGoro, actual)
 			}
 		})
 	}
@@ -187,7 +211,9 @@ func TestServer_ErrorHandling(t *testing.T) {
 			if err != nil {
 				t.Fatalf("Failed to make request: %v", err)
 			}
-			defer resp.Body.Close()
+			defer func(Body io.ReadCloser) {
+				_ = Body.Close()
+			}(resp.Body)
 
 			if resp.StatusCode != tt.expectedStatus {
 				t.Errorf("expected status %d, got %d", tt.expectedStatus, resp.StatusCode)
