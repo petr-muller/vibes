@@ -257,6 +257,30 @@ func TestServer_handleGraph(t *testing.T) {
 				}
 			},
 		},
+		{
+			name:           "GET matching-risks returns 200 and a three node graph with version 4.17.5 having two conditional risk edges with promql matching rules",
+			method:         "GET",
+			url:            "/api/upgrades_info/graph?channel=matching-risks&version=4.17.5&arch=amd64",
+			expectedStatus: 200,
+			validateGraph: func(t *testing.T, graph Graph) {
+				v4175 := findVersion(graph, "4.17.5")
+				if v4175 == nil {
+					t.Errorf("expected version 4.17.5 to be in the graph, but it was not found")
+				}
+				if len(graph.Nodes) != 3 {
+					t.Errorf("expected 3 nodes in the graph, got %d", len(graph.Nodes))
+				}
+				if len(graph.Edges) != 0 {
+					t.Errorf("expected 0 edges in the graph, got %d", len(graph.Edges))
+				}
+				if len(graph.ConditionalEdges) != 1 {
+					t.Errorf("expected 1 conditional edge in the graph, got %d", len(graph.ConditionalEdges))
+				}
+				if diff := cmp.Diff([]string{"4.17.6(SyntheticRisk:PromQL)", "4.18.0(SyntheticRisk:PromQL)"}, conditionalEdgesFrom(graph, "4.17.5")); diff != "" {
+					t.Errorf("conditional edges from 4.17.5 mismatch (-want +got):\n%s", diff)
+				}
+			},
+		},
 	}
 
 	for _, tt := range tests {
@@ -396,6 +420,28 @@ func TestServer_generateAlwaysRisksGraph(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			server := NewServer()
 			result := server.generateAlwaysRisksGraph(tt.baseVersion, tt.arch, "always-risks")
+			testhelper.CompareWithFixture(t, result)
+		})
+	}
+}
+
+func TestServer_generateMatchingRisksGraph(t *testing.T) {
+	tests := []struct {
+		name        string
+		baseVersion semver.Version
+		arch        string
+	}{
+		{
+			name:        "generates A->B->C graph with version 4.17.5 having two conditional risk edges with promql matching rules",
+			baseVersion: semver.MustParse("4.17.5"),
+			arch:        "amd64",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			server := NewServer()
+			result := server.generateMatchingRisksGraph(tt.baseVersion, tt.arch, "matching-risks")
 			testhelper.CompareWithFixture(t, result)
 		})
 	}

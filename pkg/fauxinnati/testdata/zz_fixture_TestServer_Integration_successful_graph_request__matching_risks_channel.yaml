@@ -13,7 +13,7 @@
       "version": "4.17.6",
       "payload": "quay.io/openshift-release-dev/ocp-release@sha256:00000000000000000000000000000000000000000000000000000000003d4b6e",
       "metadata": {
-        "io.openshift.upgrades.graph.release.channels": "always-risks",
+        "io.openshift.upgrades.graph.release.channels": "matching-risks",
         "io.openshift.upgrades.graph.release.manifestref": "sha256:00000000000000000000000000000000000000000000000000000000003d4b6e",
         "url": "https://access.redhat.com/errata/RHSA-2024:05706"
       }
@@ -22,7 +22,7 @@
       "version": "4.18.0",
       "payload": "quay.io/openshift-release-dev/ocp-release@sha256:00000000000000000000000000000000000000000000000000000000003d4f50",
       "metadata": {
-        "io.openshift.upgrades.graph.release.channels": "always-risks",
+        "io.openshift.upgrades.graph.release.channels": "matching-risks",
         "io.openshift.upgrades.graph.release.manifestref": "sha256:00000000000000000000000000000000000000000000000000000000003d4f50",
         "url": "https://access.redhat.com/errata/RHSA-2024:05800"
       }
@@ -43,12 +43,15 @@
       ],
       "risks": [
         {
-          "url": "https://docs.openshift.com/synthetic-risk",
+          "url": "https://docs.openshift.com/synthetic-risk-promql",
           "name": "SyntheticRisk",
-          "message": "This is a synthetic risk that always applies for testing purposes",
+          "message": "This is a synthetic risk with PromQL that always matches in OpenShift clusters",
           "matchingRules": [
             {
-              "type": "Always"
+              "type": "PromQL",
+              "promql": {
+                "promql": "vector(1)"
+              }
             }
           ]
         }

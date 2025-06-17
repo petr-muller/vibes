@@ -66,6 +66,8 @@ func (s *Server) handleGraph(w http.ResponseWriter, r *http.Request) {
 		graph = s.generateSimpleGraph(parsedVersion, arch, channel)
 	case "always-risks":
 		graph = s.generateAlwaysRisksGraph(parsedVersion, arch, channel)
+	case "matching-risks":
+		graph = s.generateMatchingRisksGraph(parsedVersion, arch, channel)
 	default:
 		graph = s.generateEmptyGraph()
 	}
@@ -343,6 +345,95 @@ func (s *Server) generateAlwaysRisksGraph(queriedVersion semver.Version, arch st
 	}
 }
 
+func (s *Server) generateMatchingRisksGraph(queriedVersion semver.Version, arch string, channel string) Graph {
+	// A is the queried version
+	versionA := queriedVersion
+
+	// B: Same minor, patch bumped by one, drop prerelease
+	versionB := queriedVersion
+	versionB.Patch++
+	versionB.Pre = nil
+
+	// C: Minor bumped by one, patch set to zero, drop prerelease
+	versionC := queriedVersion
+	versionC.Minor++
+	versionC.Patch = 0
+	versionC.Pre = nil
+
+	nodeA := Node{
+		Version: versionA,
+		Image:   fmt.Sprintf("quay.io/openshift-release-dev/ocp-release@sha256:%064x", versionA.Major*1000000+versionA.Minor*1000+versionA.Patch),
+		Metadata: map[string]string{
+			"io.openshift.upgrades.graph.release.channels":    s.formatChannelsForMetadata(versionA),
+			"io.openshift.upgrades.graph.release.manifestref": fmt.Sprintf("sha256:%064x", versionA.Major*1000000+versionA.Minor*1000+versionA.Patch),
+			"url": fmt.Sprintf("https://access.redhat.com/errata/RHSA-2024:%05d", versionA.Major*1000+versionA.Minor*100+versionA.Patch),
+		},
+	}
+
+	nodeB := Node{
+		Version: versionB,
+		Image:   fmt.Sprintf("quay.io/openshift-release-dev/ocp-release@sha256:%064x", versionB.Major*1000000+versionB.Minor*1000+versionB.Patch),
+		Metadata: map[string]string{
+			"io.openshift.upgrades.graph.release.channels":    channel,
+			"io.openshift.upgrades.graph.release.manifestref": fmt.Sprintf("sha256:%064x", versionB.Major*1000000+versionB.Minor*1000+versionB.Patch),
+			"url": fmt.Sprintf("https://access.redhat.com/errata/RHSA-2024:%05d", versionB.Major*1000+versionB.Minor*100+versionB.Patch),
+		},
+	}
+
+	nodeC := Node{
+		Version: versionC,
+		Image:   fmt.Sprintf("quay.io/openshift-release-dev/ocp-release@sha256:%064x", versionC.Major*1000000+versionC.Minor*1000+versionC.Patch),
+		Metadata: map[string]string{
+			"io.openshift.upgrades.graph.release.channels":    channel,
+			"io.openshift.upgrades.graph.release.manifestref": fmt.Sprintf("sha256:%064x", versionC.Major*1000000+versionC.Minor*1000+versionC.Patch),
+			"url": fmt.Sprintf("https://access.redhat.com/errata/RHSA-2024:%05d", versionC.Major*1000+versionC.Minor*100+versionC.Patch),
+		},
+	}
+
+	if arch != "" {
+		nodeA.Metadata["release.openshift.io/architecture"] = arch
+		nodeB.Metadata["release.openshift.io/architecture"] = arch
+		nodeC.Metadata["release.openshift.io/architecture"] = arch
+	}
+
+	// Create conditional edges with SyntheticRisk using PromQL that always evaluates to 1
+	conditionalEdges := []ConditionalEdge{
+		{
+			Edges: []ConditionalUpdate{
+				{
+					From: versionA.String(),
+					To:   versionB.String(),
+				},
+				{
+					From: versionA.String(),
+					To:   versionC.String(),
+				},
+			},
+			Risks: []ConditionalUpdateRisk{
+				{
+					URL:     "https://docs.openshift.com/synthetic-risk-promql",
+					Name:    "SyntheticRisk", 
+					Message: "This is a synthetic risk with PromQL that always matches in OpenShift clusters",
+					MatchingRules: []MatchingRule{
+						{
+							Type: "PromQL",
+							PromQL: &PromQLQuery{
+								PromQL: "vector(1)",
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	return Graph{
+		Nodes:            []Node{nodeA, nodeB, nodeC},
+		Edges:            []Edge{}, // No unconditional edges, only conditional
+		ConditionalEdges: conditionalEdges,
+	}
+}
+
 func (s *Server) generateEmptyGraph() Graph {
 	return Graph{
 		Nodes:            []Node{},
@@ -352,7 +443,7 @@ func (s *Server) generateEmptyGraph() Graph {
 }
 
 // AIDEV-NOTE: Helper to determine which channels contain the queried version
-// Currently channel-head, simple, and always-risks contain the queried version, but this will expand
+// Currently channel-head, simple, always-risks, and matching-risks contain the queried version, but this will expand
 // as more channels are added that include the queried version in their graphs
 func (s *Server) getChannelsContainingVersion(version semver.Version) []string {
 	var channels []string
@@ -360,6 +451,7 @@ func (s *Server) getChannelsContainingVersion(version semver.Version) []string {
 	// Channels that contain the queried version
 	channels = append(channels, "always-risks")
 	channels = append(channels, "channel-head")
+	channels = append(channels, "matching-risks")
 	channels = append(channels, "simple")
 	
 	// Future channels that contain the queried version will be added here
