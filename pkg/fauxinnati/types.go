@@ -1,6 +1,8 @@
 package fauxinnati
 
 import (
+	"fmt"
+
 	"github.com/blang/semver/v4"
 )
 
@@ -49,4 +51,55 @@ type ChannelInfo struct {
 	Description string
 	Example     string
 	CurlCommand string
+}
+
+// AIDEV-NOTE: Node constructor helpers to reduce code duplication across graph generation methods
+// These helpers encapsulate the repetitive patterns for generating realistic OpenShift node metadata
+
+// generateImageSHA256 creates a deterministic SHA256 hash for a version's payload image
+func generateImageSHA256(version semver.Version) string {
+	return fmt.Sprintf("%064x", version.Major*1000000+version.Minor*1000+version.Patch)
+}
+
+// generateManifestRef creates a deterministic manifest reference for a version
+func generateManifestRef(version semver.Version) string {
+	return fmt.Sprintf("sha256:%064x", version.Major*1000000+version.Minor*1000+version.Patch)
+}
+
+// generateErrataURL creates a deterministic RHSA errata URL for a version
+func generateErrataURL(version semver.Version) string {
+	return fmt.Sprintf("https://access.redhat.com/errata/RHSA-2024:%05d", version.Major*1000+version.Minor*100+version.Patch)
+}
+
+// NewNode creates a new Node with standard OpenShift metadata for the given version and channel
+func NewNode(version semver.Version, channel string) Node {
+	return Node{
+		Version: version,
+		Image:   fmt.Sprintf("quay.io/openshift-release-dev/ocp-release@sha256:%s", generateImageSHA256(version)),
+		Metadata: map[string]string{
+			"io.openshift.upgrades.graph.release.channels":    channel,
+			"io.openshift.upgrades.graph.release.manifestref": generateManifestRef(version),
+			"url": generateErrataURL(version),
+		},
+	}
+}
+
+// NewNodeWithChannelsMetadata creates a new Node with channels metadata from formatChannelsForMetadata
+func NewNodeWithChannelsMetadata(version semver.Version, channelsMetadata string) Node {
+	return Node{
+		Version: version,
+		Image:   fmt.Sprintf("quay.io/openshift-release-dev/ocp-release@sha256:%s", generateImageSHA256(version)),
+		Metadata: map[string]string{
+			"io.openshift.upgrades.graph.release.channels":    channelsMetadata,
+			"io.openshift.upgrades.graph.release.manifestref": generateManifestRef(version),
+			"url": generateErrataURL(version),
+		},
+	}
+}
+
+// SetArchitecture adds architecture metadata to a node if arch is not empty
+func (n *Node) SetArchitecture(arch string) {
+	if arch != "" {
+		n.Metadata["release.openshift.io/architecture"] = arch
+	}
 }

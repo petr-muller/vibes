@@ -98,41 +98,13 @@ func (s *Server) generateVersionNotFoundGraph(baseVersion semver.Version, arch s
 	versionC := versionA
 	versionC.Patch = 2
 
-	nodeA := Node{
-		Version: versionA,
-		Image:   fmt.Sprintf("quay.io/openshift-release-dev/ocp-release@sha256:%064x", versionA.Major*1000000+versionA.Minor*1000+versionA.Patch),
-		Metadata: map[string]string{
-			"io.openshift.upgrades.graph.release.channels":    channel,
-			"io.openshift.upgrades.graph.release.manifestref": fmt.Sprintf("sha256:%064x", versionA.Major*1000000+versionA.Minor*1000+versionA.Patch),
-			"url": fmt.Sprintf("https://access.redhat.com/errata/RHSA-2024:%05d", versionA.Major*1000+versionA.Minor*100+versionA.Patch),
-		},
-	}
+	nodeA := NewNode(versionA, channel)
+	nodeB := NewNode(versionB, channel)
+	nodeC := NewNode(versionC, channel)
 
-	nodeB := Node{
-		Version: versionB,
-		Image:   fmt.Sprintf("quay.io/openshift-release-dev/ocp-release@sha256:%064x", versionB.Major*1000000+versionB.Minor*1000+versionB.Patch),
-		Metadata: map[string]string{
-			"io.openshift.upgrades.graph.release.channels":    channel,
-			"io.openshift.upgrades.graph.release.manifestref": fmt.Sprintf("sha256:%064x", versionB.Major*1000000+versionB.Minor*1000+versionB.Patch),
-			"url": fmt.Sprintf("https://access.redhat.com/errata/RHSA-2024:%05d", versionB.Major*1000+versionB.Minor*100+versionB.Patch),
-		},
-	}
-
-	nodeC := Node{
-		Version: versionC,
-		Image:   fmt.Sprintf("quay.io/openshift-release-dev/ocp-release@sha256:%064x", versionC.Major*1000000+versionC.Minor*1000+versionC.Patch),
-		Metadata: map[string]string{
-			"io.openshift.upgrades.graph.release.channels":    channel,
-			"io.openshift.upgrades.graph.release.manifestref": fmt.Sprintf("sha256:%064x", versionC.Major*1000000+versionC.Minor*1000+versionC.Patch),
-			"url": fmt.Sprintf("https://access.redhat.com/errata/RHSA-2024:%05d", versionC.Major*1000+versionC.Minor*100+versionC.Patch),
-		},
-	}
-
-	if arch != "" {
-		nodeA.Metadata["release.openshift.io/architecture"] = arch
-		nodeB.Metadata["release.openshift.io/architecture"] = arch
-		nodeC.Metadata["release.openshift.io/architecture"] = arch
-	}
+	nodeA.SetArchitecture(arch)
+	nodeB.SetArchitecture(arch)
+	nodeC.SetArchitecture(arch)
 
 	return Graph{
 		Nodes: []Node{nodeA, nodeB, nodeC},
@@ -158,41 +130,14 @@ func (s *Server) generateChannelHeadGraph(clientVersion semver.Version, arch str
 	versionB := versionA
 	versionB.Patch = 1
 
-	nodeA := Node{
-		Version: versionA,
-		Image:   fmt.Sprintf("quay.io/openshift-release-dev/ocp-release@sha256:%064x", versionA.Major*1000000+versionA.Minor*1000+versionA.Patch),
-		Metadata: map[string]string{
-			"io.openshift.upgrades.graph.release.channels":    channel,
-			"io.openshift.upgrades.graph.release.manifestref": fmt.Sprintf("sha256:%064x", versionA.Major*1000000+versionA.Minor*1000+versionA.Patch),
-			"url": fmt.Sprintf("https://access.redhat.com/errata/RHSA-2024:%05d", versionA.Major*1000+versionA.Minor*100+versionA.Patch),
-		},
-	}
+	nodeA := NewNode(versionA, channel)
 
-	nodeB := Node{
-		Version: versionB,
-		Image:   fmt.Sprintf("quay.io/openshift-release-dev/ocp-release@sha256:%064x", versionB.Major*1000000+versionB.Minor*1000+versionB.Patch),
-		Metadata: map[string]string{
-			"io.openshift.upgrades.graph.release.channels":    channel,
-			"io.openshift.upgrades.graph.release.manifestref": fmt.Sprintf("sha256:%064x", versionB.Major*1000000+versionB.Minor*1000+versionB.Patch),
-			"url": fmt.Sprintf("https://access.redhat.com/errata/RHSA-2024:%05d", versionB.Major*1000+versionB.Minor*100+versionB.Patch),
-		},
-	}
+	nodeB := NewNode(versionB, channel)
+	nodeC := NewNodeWithChannelsMetadata(versionC, s.formatChannelsForMetadata(versionC))
 
-	nodeC := Node{
-		Version: versionC,
-		Image:   fmt.Sprintf("quay.io/openshift-release-dev/ocp-release@sha256:%064x", versionC.Major*1000000+versionC.Minor*1000+versionC.Patch),
-		Metadata: map[string]string{
-			"io.openshift.upgrades.graph.release.channels":    s.formatChannelsForMetadata(versionC),
-			"io.openshift.upgrades.graph.release.manifestref": fmt.Sprintf("sha256:%064x", versionC.Major*1000000+versionC.Minor*1000+versionC.Patch),
-			"url": fmt.Sprintf("https://access.redhat.com/errata/RHSA-2024:%05d", versionC.Major*1000+versionC.Minor*100+versionC.Patch),
-		},
-	}
-
-	if arch != "" {
-		nodeA.Metadata["release.openshift.io/architecture"] = arch
-		nodeB.Metadata["release.openshift.io/architecture"] = arch
-		nodeC.Metadata["release.openshift.io/architecture"] = arch
-	}
+	nodeA.SetArchitecture(arch)
+	nodeB.SetArchitecture(arch)
+	nodeC.SetArchitecture(arch)
 
 	return Graph{
 		Nodes: []Node{nodeA, nodeB, nodeC},
@@ -219,41 +164,13 @@ func (s *Server) generateSimpleGraph(queriedVersion semver.Version, arch string,
 	versionC.Patch = 0
 	versionC.Pre = nil
 
-	nodeA := Node{
-		Version: versionA,
-		Image:   fmt.Sprintf("quay.io/openshift-release-dev/ocp-release@sha256:%064x", versionA.Major*1000000+versionA.Minor*1000+versionA.Patch),
-		Metadata: map[string]string{
-			"io.openshift.upgrades.graph.release.channels":    s.formatChannelsForMetadata(versionA),
-			"io.openshift.upgrades.graph.release.manifestref": fmt.Sprintf("sha256:%064x", versionA.Major*1000000+versionA.Minor*1000+versionA.Patch),
-			"url": fmt.Sprintf("https://access.redhat.com/errata/RHSA-2024:%05d", versionA.Major*1000+versionA.Minor*100+versionA.Patch),
-		},
-	}
+	nodeA := NewNodeWithChannelsMetadata(versionA, s.formatChannelsForMetadata(versionA))
+	nodeB := NewNode(versionB, channel)
+	nodeC := NewNode(versionC, channel)
 
-	nodeB := Node{
-		Version: versionB,
-		Image:   fmt.Sprintf("quay.io/openshift-release-dev/ocp-release@sha256:%064x", versionB.Major*1000000+versionB.Minor*1000+versionB.Patch),
-		Metadata: map[string]string{
-			"io.openshift.upgrades.graph.release.channels":    channel,
-			"io.openshift.upgrades.graph.release.manifestref": fmt.Sprintf("sha256:%064x", versionB.Major*1000000+versionB.Minor*1000+versionB.Patch),
-			"url": fmt.Sprintf("https://access.redhat.com/errata/RHSA-2024:%05d", versionB.Major*1000+versionB.Minor*100+versionB.Patch),
-		},
-	}
-
-	nodeC := Node{
-		Version: versionC,
-		Image:   fmt.Sprintf("quay.io/openshift-release-dev/ocp-release@sha256:%064x", versionC.Major*1000000+versionC.Minor*1000+versionC.Patch),
-		Metadata: map[string]string{
-			"io.openshift.upgrades.graph.release.channels":    channel,
-			"io.openshift.upgrades.graph.release.manifestref": fmt.Sprintf("sha256:%064x", versionC.Major*1000000+versionC.Minor*1000+versionC.Patch),
-			"url": fmt.Sprintf("https://access.redhat.com/errata/RHSA-2024:%05d", versionC.Major*1000+versionC.Minor*100+versionC.Patch),
-		},
-	}
-
-	if arch != "" {
-		nodeA.Metadata["release.openshift.io/architecture"] = arch
-		nodeB.Metadata["release.openshift.io/architecture"] = arch
-		nodeC.Metadata["release.openshift.io/architecture"] = arch
-	}
+	nodeA.SetArchitecture(arch)
+	nodeB.SetArchitecture(arch)
+	nodeC.SetArchitecture(arch)
 
 	return Graph{
 		Nodes: []Node{nodeA, nodeB, nodeC},
@@ -280,41 +197,13 @@ func (s *Server) generateRisksAlwaysGraph(queriedVersion semver.Version, arch st
 	versionC.Patch = 0
 	versionC.Pre = nil
 
-	nodeA := Node{
-		Version: versionA,
-		Image:   fmt.Sprintf("quay.io/openshift-release-dev/ocp-release@sha256:%064x", versionA.Major*1000000+versionA.Minor*1000+versionA.Patch),
-		Metadata: map[string]string{
-			"io.openshift.upgrades.graph.release.channels":    s.formatChannelsForMetadata(versionA),
-			"io.openshift.upgrades.graph.release.manifestref": fmt.Sprintf("sha256:%064x", versionA.Major*1000000+versionA.Minor*1000+versionA.Patch),
-			"url": fmt.Sprintf("https://access.redhat.com/errata/RHSA-2024:%05d", versionA.Major*1000+versionA.Minor*100+versionA.Patch),
-		},
-	}
+	nodeA := NewNodeWithChannelsMetadata(versionA, s.formatChannelsForMetadata(versionA))
+	nodeB := NewNode(versionB, channel)
+	nodeC := NewNode(versionC, channel)
 
-	nodeB := Node{
-		Version: versionB,
-		Image:   fmt.Sprintf("quay.io/openshift-release-dev/ocp-release@sha256:%064x", versionB.Major*1000000+versionB.Minor*1000+versionB.Patch),
-		Metadata: map[string]string{
-			"io.openshift.upgrades.graph.release.channels":    channel,
-			"io.openshift.upgrades.graph.release.manifestref": fmt.Sprintf("sha256:%064x", versionB.Major*1000000+versionB.Minor*1000+versionB.Patch),
-			"url": fmt.Sprintf("https://access.redhat.com/errata/RHSA-2024:%05d", versionB.Major*1000+versionB.Minor*100+versionB.Patch),
-		},
-	}
-
-	nodeC := Node{
-		Version: versionC,
-		Image:   fmt.Sprintf("quay.io/openshift-release-dev/ocp-release@sha256:%064x", versionC.Major*1000000+versionC.Minor*1000+versionC.Patch),
-		Metadata: map[string]string{
-			"io.openshift.upgrades.graph.release.channels":    channel,
-			"io.openshift.upgrades.graph.release.manifestref": fmt.Sprintf("sha256:%064x", versionC.Major*1000000+versionC.Minor*1000+versionC.Patch),
-			"url": fmt.Sprintf("https://access.redhat.com/errata/RHSA-2024:%05d", versionC.Major*1000+versionC.Minor*100+versionC.Patch),
-		},
-	}
-
-	if arch != "" {
-		nodeA.Metadata["release.openshift.io/architecture"] = arch
-		nodeB.Metadata["release.openshift.io/architecture"] = arch
-		nodeC.Metadata["release.openshift.io/architecture"] = arch
-	}
+	nodeA.SetArchitecture(arch)
+	nodeB.SetArchitecture(arch)
+	nodeC.SetArchitecture(arch)
 
 	// Create conditional edges with SyntheticRisk that applies always
 	conditionalEdges := []ConditionalEdge{
@@ -366,41 +255,13 @@ func (s *Server) generateRisksMatchingGraph(queriedVersion semver.Version, arch 
 	versionC.Patch = 0
 	versionC.Pre = nil
 
-	nodeA := Node{
-		Version: versionA,
-		Image:   fmt.Sprintf("quay.io/openshift-release-dev/ocp-release@sha256:%064x", versionA.Major*1000000+versionA.Minor*1000+versionA.Patch),
-		Metadata: map[string]string{
-			"io.openshift.upgrades.graph.release.channels":    s.formatChannelsForMetadata(versionA),
-			"io.openshift.upgrades.graph.release.manifestref": fmt.Sprintf("sha256:%064x", versionA.Major*1000000+versionA.Minor*1000+versionA.Patch),
-			"url": fmt.Sprintf("https://access.redhat.com/errata/RHSA-2024:%05d", versionA.Major*1000+versionA.Minor*100+versionA.Patch),
-		},
-	}
+	nodeA := NewNodeWithChannelsMetadata(versionA, s.formatChannelsForMetadata(versionA))
+	nodeB := NewNode(versionB, channel)
+	nodeC := NewNode(versionC, channel)
 
-	nodeB := Node{
-		Version: versionB,
-		Image:   fmt.Sprintf("quay.io/openshift-release-dev/ocp-release@sha256:%064x", versionB.Major*1000000+versionB.Minor*1000+versionB.Patch),
-		Metadata: map[string]string{
-			"io.openshift.upgrades.graph.release.channels":    channel,
-			"io.openshift.upgrades.graph.release.manifestref": fmt.Sprintf("sha256:%064x", versionB.Major*1000000+versionB.Minor*1000+versionB.Patch),
-			"url": fmt.Sprintf("https://access.redhat.com/errata/RHSA-2024:%05d", versionB.Major*1000+versionB.Minor*100+versionB.Patch),
-		},
-	}
-
-	nodeC := Node{
-		Version: versionC,
-		Image:   fmt.Sprintf("quay.io/openshift-release-dev/ocp-release@sha256:%064x", versionC.Major*1000000+versionC.Minor*1000+versionC.Patch),
-		Metadata: map[string]string{
-			"io.openshift.upgrades.graph.release.channels":    channel,
-			"io.openshift.upgrades.graph.release.manifestref": fmt.Sprintf("sha256:%064x", versionC.Major*1000000+versionC.Minor*1000+versionC.Patch),
-			"url": fmt.Sprintf("https://access.redhat.com/errata/RHSA-2024:%05d", versionC.Major*1000+versionC.Minor*100+versionC.Patch),
-		},
-	}
-
-	if arch != "" {
-		nodeA.Metadata["release.openshift.io/architecture"] = arch
-		nodeB.Metadata["release.openshift.io/architecture"] = arch
-		nodeC.Metadata["release.openshift.io/architecture"] = arch
-	}
+	nodeA.SetArchitecture(arch)
+	nodeB.SetArchitecture(arch)
+	nodeC.SetArchitecture(arch)
 
 	// Create conditional edges with SyntheticRisk using PromQL that always evaluates to 1
 	conditionalEdges := []ConditionalEdge{
@@ -455,41 +316,13 @@ func (s *Server) generateRisksNonmatchingGraph(queriedVersion semver.Version, ar
 	versionC.Patch = 0
 	versionC.Pre = nil
 
-	nodeA := Node{
-		Version: versionA,
-		Image:   fmt.Sprintf("quay.io/openshift-release-dev/ocp-release@sha256:%064x", versionA.Major*1000000+versionA.Minor*1000+versionA.Patch),
-		Metadata: map[string]string{
-			"io.openshift.upgrades.graph.release.channels":    s.formatChannelsForMetadata(versionA),
-			"io.openshift.upgrades.graph.release.manifestref": fmt.Sprintf("sha256:%064x", versionA.Major*1000000+versionA.Minor*1000+versionA.Patch),
-			"url": fmt.Sprintf("https://access.redhat.com/errata/RHSA-2024:%05d", versionA.Major*1000+versionA.Minor*100+versionA.Patch),
-		},
-	}
+	nodeA := NewNodeWithChannelsMetadata(versionA, s.formatChannelsForMetadata(versionA))
+	nodeB := NewNode(versionB, channel)
+	nodeC := NewNode(versionC, channel)
 
-	nodeB := Node{
-		Version: versionB,
-		Image:   fmt.Sprintf("quay.io/openshift-release-dev/ocp-release@sha256:%064x", versionB.Major*1000000+versionB.Minor*1000+versionB.Patch),
-		Metadata: map[string]string{
-			"io.openshift.upgrades.graph.release.channels":    channel,
-			"io.openshift.upgrades.graph.release.manifestref": fmt.Sprintf("sha256:%064x", versionB.Major*1000000+versionB.Minor*1000+versionB.Patch),
-			"url": fmt.Sprintf("https://access.redhat.com/errata/RHSA-2024:%05d", versionB.Major*1000+versionB.Minor*100+versionB.Patch),
-		},
-	}
-
-	nodeC := Node{
-		Version: versionC,
-		Image:   fmt.Sprintf("quay.io/openshift-release-dev/ocp-release@sha256:%064x", versionC.Major*1000000+versionC.Minor*1000+versionC.Patch),
-		Metadata: map[string]string{
-			"io.openshift.upgrades.graph.release.channels":    channel,
-			"io.openshift.upgrades.graph.release.manifestref": fmt.Sprintf("sha256:%064x", versionC.Major*1000000+versionC.Minor*1000+versionC.Patch),
-			"url": fmt.Sprintf("https://access.redhat.com/errata/RHSA-2024:%05d", versionC.Major*1000+versionC.Minor*100+versionC.Patch),
-		},
-	}
-
-	if arch != "" {
-		nodeA.Metadata["release.openshift.io/architecture"] = arch
-		nodeB.Metadata["release.openshift.io/architecture"] = arch
-		nodeC.Metadata["release.openshift.io/architecture"] = arch
-	}
+	nodeA.SetArchitecture(arch)
+	nodeB.SetArchitecture(arch)
+	nodeC.SetArchitecture(arch)
 
 	// Create conditional edges with SyntheticRisk using PromQL that never evaluates to true
 	conditionalEdges := []ConditionalEdge{
@@ -533,19 +366,8 @@ func (s *Server) generateSmokeTestGraph(queriedVersion semver.Version, arch stri
 	// E is the queried version
 	versionE := queriedVersion
 
-	nodeE := Node{
-		Version: versionE,
-		Image:   fmt.Sprintf("quay.io/openshift-release-dev/ocp-release@sha256:%064x", versionE.Major*1000000+versionE.Minor*1000+versionE.Patch),
-		Metadata: map[string]string{
-			"io.openshift.upgrades.graph.release.channels":    s.formatChannelsForMetadata(versionE),
-			"io.openshift.upgrades.graph.release.manifestref": fmt.Sprintf("sha256:%064x", versionE.Major*1000000+versionE.Minor*1000+versionE.Patch),
-			"url": fmt.Sprintf("https://access.redhat.com/errata/RHSA-2024:%05d", versionE.Major*1000+versionE.Minor*100+versionE.Patch),
-		},
-	}
-
-	if arch != "" {
-		nodeE.Metadata["release.openshift.io/architecture"] = arch
-	}
+	nodeE := NewNodeWithChannelsMetadata(versionE, s.formatChannelsForMetadata(versionE))
+	nodeE.SetArchitecture(arch)
 
 	// D is one version back (decrement minor, reset patch to 0, drop prerelease)
 	versionD := semver.Version{
@@ -631,140 +453,42 @@ func (s *Server) generateSmokeTestGraph(queriedVersion semver.Version, arch stri
 		Patch: 4,
 	}
 
-	nodeD := Node{
-		Version: versionD,
-		Image:   fmt.Sprintf("quay.io/openshift-release-dev/ocp-release@sha256:%064x", versionD.Major*1000000+versionD.Minor*1000+versionD.Patch),
-		Metadata: map[string]string{
-			"io.openshift.upgrades.graph.release.channels":    "smoke-test",
-			"io.openshift.upgrades.graph.release.manifestref": fmt.Sprintf("sha256:%064x", versionD.Major*1000000+versionD.Minor*1000+versionD.Patch),
-			"url": fmt.Sprintf("https://access.redhat.com/errata/RHSA-2024:%05d", versionD.Major*1000+versionD.Minor*100+versionD.Patch),
-		},
-	}
+	nodeD := NewNode(versionD, "smoke-test")
 
-	nodeF := Node{
-		Version: versionF,
-		Image:   fmt.Sprintf("quay.io/openshift-release-dev/ocp-release@sha256:%064x", versionF.Major*1000000+versionF.Minor*1000+versionF.Patch),
-		Metadata: map[string]string{
-			"io.openshift.upgrades.graph.release.channels":    "smoke-test",
-			"io.openshift.upgrades.graph.release.manifestref": fmt.Sprintf("sha256:%064x", versionF.Major*1000000+versionF.Minor*1000+versionF.Patch),
-			"url": fmt.Sprintf("https://access.redhat.com/errata/RHSA-2024:%05d", versionF.Major*1000+versionF.Minor*100+versionF.Patch),
-		},
-	}
+	nodeF := NewNode(versionF, "smoke-test")
 
-	nodeG := Node{
-		Version: versionG,
-		Image:   fmt.Sprintf("quay.io/openshift-release-dev/ocp-release@sha256:%064x", versionG.Major*1000000+versionG.Minor*1000+versionG.Patch),
-		Metadata: map[string]string{
-			"io.openshift.upgrades.graph.release.channels":    "smoke-test",
-			"io.openshift.upgrades.graph.release.manifestref": fmt.Sprintf("sha256:%064x", versionG.Major*1000000+versionG.Minor*1000+versionG.Patch),
-			"url": fmt.Sprintf("https://access.redhat.com/errata/RHSA-2024:%05d", versionG.Major*1000+versionG.Minor*100+versionG.Patch),
-		},
-	}
+	nodeG := NewNode(versionG, "smoke-test")
 
-	nodeH := Node{
-		Version: versionH,
-		Image:   fmt.Sprintf("quay.io/openshift-release-dev/ocp-release@sha256:%064x", versionH.Major*1000000+versionH.Minor*1000+versionH.Patch),
-		Metadata: map[string]string{
-			"io.openshift.upgrades.graph.release.channels":    "smoke-test",
-			"io.openshift.upgrades.graph.release.manifestref": fmt.Sprintf("sha256:%064x", versionH.Major*1000000+versionH.Minor*1000+versionH.Patch),
-			"url": fmt.Sprintf("https://access.redhat.com/errata/RHSA-2024:%05d", versionH.Major*1000+versionH.Minor*100+versionH.Patch),
-		},
-	}
+	nodeH := NewNode(versionH, "smoke-test")
 
-	nodeI := Node{
-		Version: versionI,
-		Image:   fmt.Sprintf("quay.io/openshift-release-dev/ocp-release@sha256:%064x", versionI.Major*1000000+versionI.Minor*1000+versionI.Patch),
-		Metadata: map[string]string{
-			"io.openshift.upgrades.graph.release.channels":    "smoke-test",
-			"io.openshift.upgrades.graph.release.manifestref": fmt.Sprintf("sha256:%064x", versionI.Major*1000000+versionI.Minor*1000+versionI.Patch),
-			"url": fmt.Sprintf("https://access.redhat.com/errata/RHSA-2024:%05d", versionI.Major*1000+versionI.Minor*100+versionI.Patch),
-		},
-	}
+	nodeI := NewNode(versionI, "smoke-test")
 
-	nodeJ := Node{
-		Version: versionJ,
-		Image:   fmt.Sprintf("quay.io/openshift-release-dev/ocp-release@sha256:%064x", versionJ.Major*1000000+versionJ.Minor*1000+versionJ.Patch),
-		Metadata: map[string]string{
-			"io.openshift.upgrades.graph.release.channels":    "smoke-test",
-			"io.openshift.upgrades.graph.release.manifestref": fmt.Sprintf("sha256:%064x", versionJ.Major*1000000+versionJ.Minor*1000+versionJ.Patch),
-			"url": fmt.Sprintf("https://access.redhat.com/errata/RHSA-2024:%05d", versionJ.Major*1000+versionJ.Minor*100+versionJ.Patch),
-		},
-	}
+	nodeJ := NewNode(versionJ, "smoke-test")
 
-	nodeK := Node{
-		Version: versionK,
-		Image:   fmt.Sprintf("quay.io/openshift-release-dev/ocp-release@sha256:%064x", versionK.Major*1000000+versionK.Minor*1000+versionK.Patch),
-		Metadata: map[string]string{
-			"io.openshift.upgrades.graph.release.channels":    "smoke-test",
-			"io.openshift.upgrades.graph.release.manifestref": fmt.Sprintf("sha256:%064x", versionK.Major*1000000+versionK.Minor*1000+versionK.Patch),
-			"url": fmt.Sprintf("https://access.redhat.com/errata/RHSA-2024:%05d", versionK.Major*1000+versionK.Minor*100+versionK.Patch),
-		},
-	}
+	nodeK := NewNode(versionK, "smoke-test")
 
-	nodeL := Node{
-		Version: versionL,
-		Image:   fmt.Sprintf("quay.io/openshift-release-dev/ocp-release@sha256:%064x", versionL.Major*1000000+versionL.Minor*1000+versionL.Patch),
-		Metadata: map[string]string{
-			"io.openshift.upgrades.graph.release.channels":    "smoke-test",
-			"io.openshift.upgrades.graph.release.manifestref": fmt.Sprintf("sha256:%064x", versionL.Major*1000000+versionL.Minor*1000+versionL.Patch),
-			"url": fmt.Sprintf("https://access.redhat.com/errata/RHSA-2024:%05d", versionL.Major*1000+versionL.Minor*100+versionL.Patch),
-		},
-	}
+	nodeL := NewNode(versionL, "smoke-test")
 
-	nodeM := Node{
-		Version: versionM,
-		Image:   fmt.Sprintf("quay.io/openshift-release-dev/ocp-release@sha256:%064x", versionM.Major*1000000+versionM.Minor*1000+versionM.Patch),
-		Metadata: map[string]string{
-			"io.openshift.upgrades.graph.release.channels":    "smoke-test",
-			"io.openshift.upgrades.graph.release.manifestref": fmt.Sprintf("sha256:%064x", versionM.Major*1000000+versionM.Minor*1000+versionM.Patch),
-			"url": fmt.Sprintf("https://access.redhat.com/errata/RHSA-2024:%05d", versionM.Major*1000+versionM.Minor*100+versionM.Patch),
-		},
-	}
+	nodeM := NewNode(versionM, "smoke-test")
 
-	nodeN := Node{
-		Version: versionN,
-		Image:   fmt.Sprintf("quay.io/openshift-release-dev/ocp-release@sha256:%064x", versionN.Major*1000000+versionN.Minor*1000+versionN.Patch),
-		Metadata: map[string]string{
-			"io.openshift.upgrades.graph.release.channels":    "smoke-test",
-			"io.openshift.upgrades.graph.release.manifestref": fmt.Sprintf("sha256:%064x", versionN.Major*1000000+versionN.Minor*1000+versionN.Patch),
-			"url": fmt.Sprintf("https://access.redhat.com/errata/RHSA-2024:%05d", versionN.Major*1000+versionN.Minor*100+versionN.Patch),
-		},
-	}
+	nodeN := NewNode(versionN, "smoke-test")
 
-	nodeO := Node{
-		Version: versionO,
-		Image:   fmt.Sprintf("quay.io/openshift-release-dev/ocp-release@sha256:%064x", versionO.Major*1000000+versionO.Minor*1000+versionO.Patch),
-		Metadata: map[string]string{
-			"io.openshift.upgrades.graph.release.channels":    "smoke-test",
-			"io.openshift.upgrades.graph.release.manifestref": fmt.Sprintf("sha256:%064x", versionO.Major*1000000+versionO.Minor*1000+versionO.Patch),
-			"url": fmt.Sprintf("https://access.redhat.com/errata/RHSA-2024:%05d", versionO.Major*1000+versionO.Minor*100+versionO.Patch),
-		},
-	}
+	nodeO := NewNode(versionO, "smoke-test")
 
-	nodeP := Node{
-		Version: versionP,
-		Image:   fmt.Sprintf("quay.io/openshift-release-dev/ocp-release@sha256:%064x", versionP.Major*1000000+versionP.Minor*1000+versionP.Patch),
-		Metadata: map[string]string{
-			"io.openshift.upgrades.graph.release.channels":    "smoke-test",
-			"io.openshift.upgrades.graph.release.manifestref": fmt.Sprintf("sha256:%064x", versionP.Major*1000000+versionP.Minor*1000+versionP.Patch),
-			"url": fmt.Sprintf("https://access.redhat.com/errata/RHSA-2024:%05d", versionP.Major*1000+versionP.Minor*100+versionP.Patch),
-		},
-	}
+	nodeP := NewNode(versionP, "smoke-test")
 
-	if arch != "" {
-		nodeD.Metadata["release.openshift.io/architecture"] = arch
-		nodeF.Metadata["release.openshift.io/architecture"] = arch
-		nodeG.Metadata["release.openshift.io/architecture"] = arch
-		nodeH.Metadata["release.openshift.io/architecture"] = arch
-		nodeI.Metadata["release.openshift.io/architecture"] = arch
-		nodeJ.Metadata["release.openshift.io/architecture"] = arch
-		nodeK.Metadata["release.openshift.io/architecture"] = arch
-		nodeL.Metadata["release.openshift.io/architecture"] = arch
-		nodeM.Metadata["release.openshift.io/architecture"] = arch
-		nodeN.Metadata["release.openshift.io/architecture"] = arch
-		nodeO.Metadata["release.openshift.io/architecture"] = arch
-		nodeP.Metadata["release.openshift.io/architecture"] = arch
-	}
+	nodeD.SetArchitecture(arch)
+	nodeF.SetArchitecture(arch)
+	nodeG.SetArchitecture(arch)
+	nodeH.SetArchitecture(arch)
+	nodeI.SetArchitecture(arch)
+	nodeJ.SetArchitecture(arch)
+	nodeK.SetArchitecture(arch)
+	nodeL.SetArchitecture(arch)
+	nodeM.SetArchitecture(arch)
+	nodeN.SetArchitecture(arch)
+	nodeO.SetArchitecture(arch)
+	nodeP.SetArchitecture(arch)
 
 	// Create conditional edges with mixed risk types
 	conditionalEdges := []ConditionalEdge{
