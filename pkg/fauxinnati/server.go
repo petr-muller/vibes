@@ -3,6 +3,7 @@ package fauxinnati
 import (
 	"encoding/json"
 	"fmt"
+	"html/template"
 	"net/http"
 	"sort"
 	"strings"
@@ -23,6 +24,7 @@ func NewServer() *Server {
 }
 
 func (s *Server) setupRoutes() {
+	s.mux.HandleFunc("/", s.handleRoot)
 	s.mux.HandleFunc("/api/upgrades_info/graph", s.handleGraph)
 	s.mux.HandleFunc("/healthz", s.handleHealthz)
 	s.mux.HandleFunc("/readyz", s.handleReadyz)
@@ -936,6 +938,273 @@ func (s *Server) formatChannelsForMetadata(version semver.Version) string {
 	channels := s.getChannelsContainingVersion(version)
 	sort.Strings(channels) // Ensure consistent ordering
 	return strings.Join(channels, ",")
+}
+
+func (s *Server) generateRootHTML(host string) string {
+	baseURL := fmt.Sprintf("http://%s", host)
+	if host == "" {
+		baseURL = "http://localhost:8080"
+	}
+
+	apiURL := fmt.Sprintf("%s/api/upgrades_info/graph", baseURL)
+	exampleVersion := "4.18.42"
+
+	// Generate live examples for each channel
+	channelNames := []string{"version-not-found", "channel-head", "simple", "risks-always", "risks-matching", "risks-nonmatching", "smoke-test"}
+	channelDescriptions := []string{
+		"Three-node graph excluding the requested version. Creates a forward progression path.",
+		"Three-node graph where the client's version is the head. Shows upgrade history.",
+		"Three-node linear progression from the client's version. Basic upgrade path.",
+		"Three-node graph with conditional edges that always block updates (Always matching rule).",
+		"Three-node graph with PromQL conditional edges that match (PromQL: vector(1)).",
+		"Three-node graph with PromQL conditional edges that don't match (PromQL: vector(0)).",
+		"Comprehensive 13-node graph with mixed conditional edges for testing all Cincinnati features.",
+	}
+	
+	var channels []ChannelInfo
+	for i, name := range channelNames {
+		curlCmd := fmt.Sprintf(`curl "%s?channel=%s&version=%s&arch=amd64"`, apiURL, name, exampleVersion)
+		channels = append(channels, ChannelInfo{
+			Name:        name,
+			Description: channelDescriptions[i],
+			Example:     s.generateChannelExample(name, exampleVersion),
+			CurlCommand: curlCmd,
+		})
+	}
+
+	tmpl := `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>fauxinnati - Mock Cincinnati Update Graph Server</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 2rem; line-height: 1.6; }
+        .header { border-bottom: 2px solid #007acc; padding-bottom: 1rem; margin-bottom: 2rem; }
+        .api-url { background: #f5f5f5; padding: 1rem; border-radius: 5px; font-family: monospace; margin: 1rem 0; }
+        .channel { margin: 1.5rem 0; padding: 1rem; border: 1px solid #ddd; border-radius: 5px; }
+        .channel h3 { margin-top: 0; color: #007acc; }
+        .example { background: #f8f9fa; padding: 1rem; border-radius: 3px; font-family: monospace; font-size: 0.9em; margin-top: 0.5rem; white-space: pre-wrap; }
+        .copy-button { background: #007acc; color: white; border: none; padding: 0.3rem 0.6rem; border-radius: 3px; cursor: pointer; font-size: 0.8em; }
+        .copy-button:hover { background: #005a9f; }
+        code { background: #f1f1f1; padding: 0.2rem 0.4rem; border-radius: 3px; font-family: monospace; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🔄 fauxinnati</h1>
+        <p>Mock Cincinnati Update Graph Server for OpenShift</p>
+    </div>
+
+    <h2>📡 API Endpoint</h2>
+    <div class="api-url">
+        <strong>Base URL:</strong> {{.APIUrl}}
+        <button class="copy-button" onclick="copyToClipboard('{{.APIUrl}}')">Copy</button>
+    </div>
+
+    <p><strong>Required Parameters:</strong></p>
+    <ul>
+        <li><code>channel</code> - Update channel name</li>
+        <li><code>version</code> - Base version in semver format (e.g., <code>4.17.5</code>)</li>
+    </ul>
+    <p><strong>Optional Parameters:</strong></p>
+    <ul>
+        <li><code>arch</code> - Architecture (e.g., <code>amd64</code>)</li>
+    </ul>
+
+    <h2>📋 Available Channels</h2>
+    <p>All examples below use version <strong>{{.ExampleVersion}}</strong> to show live graph structures:</p>
+
+    {{range .Channels}}
+    <div class="channel">
+        <h3>{{.Name}}</h3>
+        <p>{{.Description}}</p>
+        <div class="example">{{.Example}}</div>
+        <p><strong>Try it:</strong> <code>{{.CurlCommand}}</code> 
+        <button class="copy-button" onclick="copyToClipboard('{{.CurlCommand}}')">Copy</button></p>
+    </div>
+    {{end}}
+
+    <h2>ℹ️ About</h2>
+    <p>fauxinnati implements the Cincinnati update graph protocol used by OpenShift clusters to discover available updates. Each channel demonstrates different graph topologies and conditional update scenarios.</p>
+
+    <script>
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(function() {
+                console.log('Copied to clipboard');
+            });
+        }
+    </script>
+</body>
+</html>`
+
+	data := struct {
+		APIUrl         string
+		ExampleVersion string
+		Channels       []ChannelInfo
+	}{
+		APIUrl:         apiURL,
+		ExampleVersion: exampleVersion,
+		Channels:       channels,
+	}
+
+	t := template.Must(template.New("root").Parse(tmpl))
+	var buf strings.Builder
+	if err := t.Execute(&buf, data); err != nil {
+		return fmt.Sprintf("<html><body><h1>Error generating page: %v</h1></body></html>", err)
+	}
+
+	return buf.String()
+}
+
+func (s *Server) generateChannelExample(channel, version string) string {
+	parsedVersion, err := semver.Parse(version)
+	if err != nil {
+		return fmt.Sprintf("Error parsing version %s: %v", version, err)
+	}
+
+	var graph Graph
+	switch channel {
+	case "version-not-found":
+		graph = s.generateVersionNotFoundGraph(parsedVersion, "amd64", channel)
+	case "channel-head":
+		graph = s.generateChannelHeadGraph(parsedVersion, "amd64", channel)
+	case "simple":
+		graph = s.generateSimpleGraph(parsedVersion, "amd64", channel)
+	case "risks-always":
+		graph = s.generateRisksAlwaysGraph(parsedVersion, "amd64", channel)
+	case "risks-matching":
+		graph = s.generateRisksMatchingGraph(parsedVersion, "amd64", channel)
+	case "risks-nonmatching":
+		graph = s.generateRisksNonmatchingGraph(parsedVersion, "amd64", channel)
+	case "smoke-test":
+		graph = s.generateSmokeTestGraph(parsedVersion, "amd64", channel)
+	default:
+		return "Unknown channel"
+	}
+
+	return s.graphToASCII(graph)
+}
+
+func (s *Server) graphToASCII(graph Graph) string {
+	if len(graph.Nodes) == 0 {
+		return "Empty graph"
+	}
+
+	var result strings.Builder
+	
+	// Show nodes
+	result.WriteString("Nodes:\n")
+	for i, node := range graph.Nodes {
+		result.WriteString(fmt.Sprintf("  [%d] %s\n", i, node.Version.String()))
+	}
+	
+	// Show unconditional edges
+	if len(graph.Edges) > 0 {
+		result.WriteString("\nUnconditional Edges:\n")
+		for _, edge := range graph.Edges {
+			fromVersion := graph.Nodes[edge[0]].Version.String()
+			toVersion := graph.Nodes[edge[1]].Version.String()
+			result.WriteString(fmt.Sprintf("  %s → %s\n", fromVersion, toVersion))
+		}
+	}
+	
+	// Show conditional edges with risks
+	if len(graph.ConditionalEdges) > 0 {
+		result.WriteString("\nConditional Edges:\n")
+		for _, condEdge := range graph.ConditionalEdges {
+			for _, edge := range condEdge.Edges {
+				result.WriteString(fmt.Sprintf("  %s ⇢ %s", edge.From, edge.To))
+				if len(condEdge.Risks) > 0 {
+					risk := condEdge.Risks[0] // Show first risk for simplicity
+					if len(risk.MatchingRules) > 0 {
+						rule := risk.MatchingRules[0]
+						if rule.Type == "Always" {
+							result.WriteString(" [Risk: Always]")
+						} else if rule.Type == "PromQL" && rule.PromQL != nil {
+							result.WriteString(fmt.Sprintf(" [Risk: %s]", rule.PromQL.PromQL))
+						}
+					}
+				}
+				result.WriteString("\n")
+			}
+		}
+	}
+	
+	// Simple ASCII diagram for small graphs
+	if len(graph.Nodes) <= 5 {
+		result.WriteString("\nGraph Visualization:\n")
+		result.WriteString(s.simpleGraphDiagram(graph))
+	}
+	
+	return result.String()
+}
+
+func (s *Server) simpleGraphDiagram(graph Graph) string {
+	if len(graph.Nodes) == 0 {
+		return "No nodes"
+	}
+	
+	// For simple 3-node linear graphs, show a simple diagram
+	if len(graph.Nodes) == 3 {
+		n0 := graph.Nodes[0].Version.String()
+		n1 := graph.Nodes[1].Version.String()
+		n2 := graph.Nodes[2].Version.String()
+		
+		// Check if it's a linear progression
+		hasLinearEdges := false
+		for _, edge := range graph.Edges {
+			if (edge[0] == 0 && edge[1] == 1) || (edge[0] == 1 && edge[1] == 2) {
+				hasLinearEdges = true
+			}
+		}
+		
+		if hasLinearEdges {
+			return fmt.Sprintf("  %s → %s → %s", n0, n1, n2)
+		}
+		
+		// Check for branching pattern (0 -> 1, 0 -> 2)
+		hasBranchingEdges := false
+		for _, edge := range graph.Edges {
+			if (edge[0] == 0 && edge[1] == 1) || (edge[0] == 0 && edge[1] == 2) {
+				hasBranchingEdges = true
+			}
+		}
+		
+		if hasBranchingEdges {
+			return fmt.Sprintf("      %s\n     ↗\n  %s\n     ↘\n      %s", n1, n0, n2)
+		}
+	}
+	
+	// For smoke-test or complex graphs, show a summary
+	if len(graph.Nodes) > 5 {
+		return fmt.Sprintf("Complex graph with %d nodes, %d edges, %d conditional edge groups", 
+			len(graph.Nodes), len(graph.Edges), len(graph.ConditionalEdges))
+	}
+	
+	// Default: just list versions
+	var versions []string
+	for _, node := range graph.Nodes {
+		versions = append(versions, node.Version.String())
+	}
+	return strings.Join(versions, " → ")
+}
+
+func (s *Server) handleRoot(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	if r.URL.Path != "/" {
+		http.NotFound(w, r)
+		return
+	}
+
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	
+	html := s.generateRootHTML(r.Host)
+	w.Write([]byte(html))
 }
 
 func (s *Server) handleHealthz(w http.ResponseWriter, r *http.Request) {

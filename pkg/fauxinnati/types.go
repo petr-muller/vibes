@@ -43,3 +43,10 @@ type MatchingRule struct {
 type PromQLQuery struct {
 	PromQL string `json:"promql"`
 }
+
+type ChannelInfo struct {
+	Name        string
+	Description string
+	Example     string
+	CurlCommand string
+}
