@@ -1166,88 +1166,273 @@ func (s *Server) simpleGraphDiagram(graph Graph) string {
 		return "No nodes"
 	}
 	
-	// For simple 3-node graphs, show appropriate diagram
-	if len(graph.Nodes) == 3 {
-		n0 := graph.Nodes[0].Version.String()
-		n1 := graph.Nodes[1].Version.String()
-		n2 := graph.Nodes[2].Version.String()
-		
-		// Build edge map for accurate detection
-		edgeMap := make(map[[2]int]bool)
-		for _, edge := range graph.Edges {
-			edgeMap[edge] = true
-		}
-		
-		// Handle risk channels (no unconditional edges, only conditional)
-		if len(graph.Edges) == 0 && len(graph.ConditionalEdges) > 0 {
-			// Check if conditional edges form a branching pattern from node 0
-			condEdge := graph.ConditionalEdges[0]
-			if len(condEdge.Edges) == 2 {
-				from0 := condEdge.Edges[0].From == n0
-				from1 := condEdge.Edges[1].From == n0
-				if from0 && from1 {
-					if n0 == "4.18.42" { n0 = "<strong>" + n0 + "</strong>" }
-					if n1 == "4.18.42" { n1 = "<strong>" + n1 + "</strong>" }
-					if n2 == "4.18.42" { n2 = "<strong>" + n2 + "</strong>" }
-					
-					// Get risk info for display
-					var riskInfo string
-					if len(condEdge.Risks) > 0 {
-						var riskStrs []string
-						for _, risk := range condEdge.Risks {
-							if len(risk.MatchingRules) > 0 {
-								rule := risk.MatchingRules[0]
-								riskStrs = append(riskStrs, fmt.Sprintf("%s:%s", risk.Name, rule.Type))
-							}
-						}
-						if len(riskStrs) > 0 {
-							riskInfo = fmt.Sprintf("[%s]", strings.Join(riskStrs, ","))
-						}
-					}
-					
-					return fmt.Sprintf("      %s\n  ↗ %s\n%s\n  ↘ %s\n      %s", n1, riskInfo, n0, riskInfo, n2)
+	// Use tree-like visualization for all graphs
+	return s.complexGraphDiagram(graph)
+}
+
+func (s *Server) complexGraphDiagram(graph Graph) string {
+	if len(graph.Nodes) == 0 {
+		return "Empty graph"
+	}
+	
+	// Use the tree-like visualization for all graphs
+	return s.renderASCIIDAG(graph)
+}
+
+
+func (s *Server) renderASCIIDAG(graph Graph) string {
+	if len(graph.Nodes) == 0 {
+		return "Empty graph"
+	}
+	
+	// Build adjacency list from unconditional edges
+	adj := make(map[int][]int)
+	for _, edge := range graph.Edges {
+		adj[edge[0]] = append(adj[edge[0]], edge[1])
+	}
+	
+	// Build conditional adjacency list with risk info
+	conditionalAdj := make(map[int][]ConditionalChild)
+	versionToIndex := make(map[string]int)
+	for i, node := range graph.Nodes {
+		versionToIndex[node.Version.String()] = i
+	}
+	
+	for _, condEdge := range graph.ConditionalEdges {
+		var riskName string
+		if len(condEdge.Risks) > 0 {
+			var riskStrs []string
+			for _, risk := range condEdge.Risks {
+				if len(risk.MatchingRules) > 0 {
+					rule := risk.MatchingRules[0]
+					riskStrs = append(riskStrs, fmt.Sprintf("%s:%s", risk.Name, rule.Type))
 				}
 			}
+			riskName = strings.Join(riskStrs, ",")
 		}
 		
-		// Check for linear progression (0->1->2)
-		if edgeMap[[2]int{0, 1}] && edgeMap[[2]int{1, 2}] && len(graph.Edges) == 2 {
-			if n0 == "4.18.42" { n0 = "<strong>" + n0 + "</strong>" }
-			if n1 == "4.18.42" { n1 = "<strong>" + n1 + "</strong>" }
-			if n2 == "4.18.42" { n2 = "<strong>" + n2 + "</strong>" }
-			return fmt.Sprintf("  %s → %s → %s", n0, n1, n2)
-		}
-		
-		// Check for branching pattern (0->1, 0->2)
-		if edgeMap[[2]int{0, 1}] && edgeMap[[2]int{0, 2}] && len(graph.Edges) == 2 {
-			if n0 == "4.18.42" { n0 = "<strong>" + n0 + "</strong>" }
-			if n1 == "4.18.42" { n1 = "<strong>" + n1 + "</strong>" }
-			if n2 == "4.18.42" { n2 = "<strong>" + n2 + "</strong>" }
-			return fmt.Sprintf("      %s\n     ↗\n  %s\n     ↘\n      %s", n1, n0, n2)
+		for _, edge := range condEdge.Edges {
+			fromIdx := versionToIndex[edge.From]
+			toIdx := versionToIndex[edge.To]
+			conditionalAdj[fromIdx] = append(conditionalAdj[fromIdx], ConditionalChild{
+				NodeIndex: toIdx,
+				RiskName:  riskName,
+			})
 		}
 	}
 	
-	// For smoke-test or complex graphs, show a summary
-	if len(graph.Nodes) > 5 {
-		// Check if this is smoke-test by looking for the specific version pattern
-		if len(graph.Nodes) == 13 {
-			return "Complex 13-node smoke-test graph:\nD(4.16.0) and E(4.17.5) as roots with branching paths\nthrough multiple versions to test all Cincinnati features"
+	// Sanity check: verify this is a tree-like structure
+	// Count total incoming edges (unconditional + conditional) for each node
+	totalInDegree := make([]int, len(graph.Nodes))
+	for _, neighbors := range adj {
+		for _, neighbor := range neighbors {
+			totalInDegree[neighbor]++
 		}
-		return fmt.Sprintf("Complex graph with %d nodes, %d edges, %d conditional edge groups", 
-			len(graph.Nodes), len(graph.Edges), len(graph.ConditionalEdges))
+	}
+	for _, condChildren := range conditionalAdj {
+		for _, condChild := range condChildren {
+			totalInDegree[condChild.NodeIndex]++
+		}
 	}
 	
-	// Default: just list versions
-	var versions []string
-	for _, node := range graph.Nodes {
-		versionStr := node.Version.String()
-		if versionStr == "4.18.42" {
-			versionStr = "<strong>" + versionStr + "</strong>"
+	// Check if any node has more than one incoming edge (multiple parents)
+	multiParentNodes := []string{}
+	for i, inDegree := range totalInDegree {
+		if inDegree > 1 {
+			version := graph.Nodes[i].Version.String()
+			if version == "4.18.42" {
+				version = "<strong>" + version + "</strong>"
+			}
+			multiParentNodes = append(multiParentNodes, version)
 		}
-		versions = append(versions, versionStr)
 	}
-	return strings.Join(versions, " → ")
+	
+	var result strings.Builder
+	if len(multiParentNodes) > 0 {
+		result.WriteString("Complex DAG with multiple paths to same nodes:\n\n")
+		result.WriteString(fmt.Sprintf("Cannot visualize as tree - nodes with multiple parents: %s\n\n", 
+			strings.Join(multiParentNodes, ", ")))
+		result.WriteString("Graph summary:\n")
+		result.WriteString(fmt.Sprintf("- %d nodes, %d unconditional edges, %d conditional edge groups\n", 
+			len(graph.Nodes), len(graph.Edges), len(graph.ConditionalEdges)))
+		
+		// Show key nodes
+		result.WriteString("- Key nodes: ")
+		keyNodes := []string{}
+		for i, node := range graph.Nodes {
+			if i < 3 || node.Version.String() == "4.18.42" || i >= len(graph.Nodes)-2 {
+				version := node.Version.String()
+				if version == "4.18.42" {
+					version = "<strong>" + version + "</strong>"
+				}
+				keyNodes = append(keyNodes, version)
+			} else if i == 3 && len(keyNodes) == 3 {
+				keyNodes = append(keyNodes, "...")
+			}
+		}
+		result.WriteString(strings.Join(keyNodes, ", ") + "\n")
+		return result.String()
+	}
+	
+	// It's tree-like, proceed with tree visualization
+	result.WriteString("Complete DAG structure (tree-like):\n\n")
+	
+	// Find root nodes (no incoming edges)
+	roots := []int{}
+	for i, degree := range totalInDegree {
+		if degree == 0 {
+			roots = append(roots, i)
+		}
+	}
+	
+	// Render each root as a tree with both unconditional and conditional edges
+	visited := make(map[int]bool)
+	for i, root := range roots {
+		if i > 0 {
+			result.WriteString("\n")
+		}
+		s.renderCompleteTreeFromNode(&result, root, adj, conditionalAdj, graph.Nodes, visited, "")
+	}
+	
+	return result.String()
 }
+
+type ConditionalChild struct {
+	NodeIndex int
+	RiskName  string
+}
+
+func (s *Server) renderCompleteTreeFromNode(result *strings.Builder, nodeIdx int, adj map[int][]int, conditionalAdj map[int][]ConditionalChild, nodes []Node, visited map[int]bool, prefix string) {
+	if visited[nodeIdx] {
+		return
+	}
+	visited[nodeIdx] = true
+	
+	// Format node name
+	version := nodes[nodeIdx].Version.String()
+	if version == "4.18.42" {
+		version = "<strong>" + version + "</strong>"
+	}
+	
+	result.WriteString(prefix + version + "\n")
+	
+	// Get all children (unconditional + conditional)
+	var allChildren []ChildInfo
+	
+	// Add unconditional children
+	for _, child := range adj[nodeIdx] {
+		allChildren = append(allChildren, ChildInfo{
+			NodeIndex:     child,
+			IsConditional: false,
+			RiskName:      "",
+		})
+	}
+	
+	// Add conditional children
+	for _, condChild := range conditionalAdj[nodeIdx] {
+		allChildren = append(allChildren, ChildInfo{
+			NodeIndex:     condChild.NodeIndex,
+			IsConditional: true,
+			RiskName:      condChild.RiskName,
+		})
+	}
+	
+	// Draw all children
+	for i, child := range allChildren {
+		var childPrefix string
+		var nextPrefix string
+		
+		if i == len(allChildren)-1 {
+			// Last child
+			if child.IsConditional {
+				childPrefix = prefix + "└⇢ [" + child.RiskName + "] "
+			} else {
+				childPrefix = prefix + "└── "
+			}
+			nextPrefix = prefix + "    "
+		} else {
+			// Not last child
+			if child.IsConditional {
+				childPrefix = prefix + "├⇢ [" + child.RiskName + "] "
+			} else {
+				childPrefix = prefix + "├── "
+			}
+			nextPrefix = prefix + "│   "
+		}
+		
+		// Draw the child node
+		s.renderCompleteTreeFromNodeHelper(result, child.NodeIndex, adj, conditionalAdj, nodes, visited, childPrefix, nextPrefix)
+	}
+}
+
+type ChildInfo struct {
+	NodeIndex     int
+	IsConditional bool
+	RiskName      string
+}
+
+func (s *Server) renderCompleteTreeFromNodeHelper(result *strings.Builder, nodeIdx int, adj map[int][]int, conditionalAdj map[int][]ConditionalChild, nodes []Node, visited map[int]bool, currentPrefix, nextPrefix string) {
+	if visited[nodeIdx] {
+		return
+	}
+	visited[nodeIdx] = true
+	
+	// Format node name
+	version := nodes[nodeIdx].Version.String()
+	if version == "4.18.42" {
+		version = "<strong>" + version + "</strong>"
+	}
+	
+	result.WriteString(currentPrefix + version + "\n")
+	
+	// Get all children (unconditional + conditional)
+	var allChildren []ChildInfo
+	
+	// Add unconditional children
+	for _, child := range adj[nodeIdx] {
+		allChildren = append(allChildren, ChildInfo{
+			NodeIndex:     child,
+			IsConditional: false,
+			RiskName:      "",
+		})
+	}
+	
+	// Add conditional children
+	for _, condChild := range conditionalAdj[nodeIdx] {
+		allChildren = append(allChildren, ChildInfo{
+			NodeIndex:     condChild.NodeIndex,
+			IsConditional: true,
+			RiskName:      condChild.RiskName,
+		})
+	}
+	
+	// Draw all children
+	for i, child := range allChildren {
+		var childPrefix string
+		var grandChildPrefix string
+		
+		if i == len(allChildren)-1 {
+			// Last child
+			if child.IsConditional {
+				childPrefix = nextPrefix + "└⇢ [" + child.RiskName + "] "
+			} else {
+				childPrefix = nextPrefix + "└── "
+			}
+			grandChildPrefix = nextPrefix + "    "
+		} else {
+			// Not last child
+			if child.IsConditional {
+				childPrefix = nextPrefix + "├⇢ [" + child.RiskName + "] "
+			} else {
+				childPrefix = nextPrefix + "├── "
+			}
+			grandChildPrefix = nextPrefix + "│   "
+		}
+		
+		s.renderCompleteTreeFromNodeHelper(result, child.NodeIndex, adj, conditionalAdj, nodes, visited, childPrefix, grandChildPrefix)
+	}
+}
+
 
 func (s *Server) handleRoot(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
