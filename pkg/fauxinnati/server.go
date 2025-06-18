@@ -154,7 +154,7 @@ func (s *Server) generateChannelHeadGraph(clientVersion semver.Version, arch str
 	versionA.Patch = 0
 	versionA.Pre = nil // Clear prerelease
 
-	// Node B: Previous minor version with patch 1  
+	// Node B: Previous minor version with patch 1
 	versionB := versionA
 	versionB.Patch = 1
 
@@ -332,7 +332,7 @@ func (s *Server) generateRisksAlwaysGraph(queriedVersion semver.Version, arch st
 			Risks: []ConditionalUpdateRisk{
 				{
 					URL:     "https://docs.openshift.com/synthetic-risk",
-					Name:    "SyntheticRisk", 
+					Name:    "SyntheticRisk",
 					Message: "This is a synthetic risk that always applies for testing purposes",
 					MatchingRules: []MatchingRule{
 						{
@@ -418,7 +418,7 @@ func (s *Server) generateRisksMatchingGraph(queriedVersion semver.Version, arch 
 			Risks: []ConditionalUpdateRisk{
 				{
 					URL:     "https://docs.openshift.com/synthetic-risk-promql",
-					Name:    "SyntheticRisk", 
+					Name:    "SyntheticRisk",
 					Message: "This is a synthetic risk with PromQL that always matches in OpenShift clusters",
 					MatchingRules: []MatchingRule{
 						{
@@ -507,7 +507,7 @@ func (s *Server) generateRisksNonmatchingGraph(queriedVersion semver.Version, ar
 			Risks: []ConditionalUpdateRisk{
 				{
 					URL:     "https://docs.openshift.com/synthetic-risk-promql-nonmatching",
-					Name:    "SyntheticRisk", 
+					Name:    "SyntheticRisk",
 					Message: "This is a synthetic risk with PromQL that never matches in OpenShift clusters",
 					MatchingRules: []MatchingRule{
 						{
@@ -553,77 +553,77 @@ func (s *Server) generateSmokeTestGraph(queriedVersion semver.Version, arch stri
 		Minor: versionE.Minor - 1,
 		Patch: 0,
 	}
-	
+
 	// F is one patch ahead of D (so D=4.16.0, F=4.16.1)
 	versionF := semver.Version{
 		Major: versionD.Major,
 		Minor: versionD.Minor,
 		Patch: versionD.Patch + 1,
 	}
-	
+
 	// G is one patch ahead of E (so E=4.17.5, G=4.17.6)
 	versionG := semver.Version{
 		Major: versionE.Major,
 		Minor: versionE.Minor,
 		Patch: versionE.Patch + 1,
 	}
-	
+
 	// H is one minor ahead of E (so E=4.17.5, H=4.18.0)
 	versionH := semver.Version{
 		Major: versionE.Major,
 		Minor: versionE.Minor + 1,
 		Patch: 0,
 	}
-	
+
 	// I is 4.17.7 (for conditional edge with RiskA:Always)
 	versionI := semver.Version{
 		Major: versionE.Major,
 		Minor: versionE.Minor,
 		Patch: 7,
 	}
-	
+
 	// J is 4.18.1 (for conditional edge with RiskA:Always)
 	versionJ := semver.Version{
 		Major: versionE.Major,
 		Minor: versionE.Minor + 1,
 		Patch: 1,
 	}
-	
+
 	// K is 4.17.8 (for conditional edge with RiskBMatches:PromQL)
 	versionK := semver.Version{
 		Major: versionE.Major,
 		Minor: versionE.Minor,
 		Patch: 8,
 	}
-	
+
 	// L is 4.18.2 (for conditional edge with RiskBMatches:PromQL)
 	versionL := semver.Version{
 		Major: versionE.Major,
 		Minor: versionE.Minor + 1,
 		Patch: 2,
 	}
-	
+
 	// M is 4.17.9 (for conditional edge with RiskCNoMatch:PromQL)
 	versionM := semver.Version{
 		Major: versionE.Major,
 		Minor: versionE.Minor,
 		Patch: 9,
 	}
-	
+
 	// N is 4.18.3 (for conditional edge with RiskCNoMatch:PromQL)
 	versionN := semver.Version{
 		Major: versionE.Major,
 		Minor: versionE.Minor + 1,
 		Patch: 3,
 	}
-	
+
 	// O is 4.17.10 (for conditional edge with combined risks)
 	versionO := semver.Version{
 		Major: versionE.Major,
 		Minor: versionE.Minor,
 		Patch: 10,
 	}
-	
+
 	// P is 4.18.4 (for conditional edge with combined risks)
 	versionP := semver.Version{
 		Major: versionE.Major,
@@ -640,7 +640,7 @@ func (s *Server) generateSmokeTestGraph(queriedVersion semver.Version, arch stri
 			"url": fmt.Sprintf("https://access.redhat.com/errata/RHSA-2024:%05d", versionD.Major*1000+versionD.Minor*100+versionD.Patch),
 		},
 	}
-	
+
 	nodeF := Node{
 		Version: versionF,
 		Image:   fmt.Sprintf("quay.io/openshift-release-dev/ocp-release@sha256:%064x", versionF.Major*1000000+versionF.Minor*1000+versionF.Patch),
@@ -650,7 +650,7 @@ func (s *Server) generateSmokeTestGraph(queriedVersion semver.Version, arch stri
 			"url": fmt.Sprintf("https://access.redhat.com/errata/RHSA-2024:%05d", versionF.Major*1000+versionF.Minor*100+versionF.Patch),
 		},
 	}
-	
+
 	nodeG := Node{
 		Version: versionG,
 		Image:   fmt.Sprintf("quay.io/openshift-release-dev/ocp-release@sha256:%064x", versionG.Major*1000000+versionG.Minor*1000+versionG.Patch),
@@ -660,7 +660,7 @@ func (s *Server) generateSmokeTestGraph(queriedVersion semver.Version, arch stri
 			"url": fmt.Sprintf("https://access.redhat.com/errata/RHSA-2024:%05d", versionG.Major*1000+versionG.Minor*100+versionG.Patch),
 		},
 	}
-	
+
 	nodeH := Node{
 		Version: versionH,
 		Image:   fmt.Sprintf("quay.io/openshift-release-dev/ocp-release@sha256:%064x", versionH.Major*1000000+versionH.Minor*1000+versionH.Patch),
@@ -670,7 +670,7 @@ func (s *Server) generateSmokeTestGraph(queriedVersion semver.Version, arch stri
 			"url": fmt.Sprintf("https://access.redhat.com/errata/RHSA-2024:%05d", versionH.Major*1000+versionH.Minor*100+versionH.Patch),
 		},
 	}
-	
+
 	nodeI := Node{
 		Version: versionI,
 		Image:   fmt.Sprintf("quay.io/openshift-release-dev/ocp-release@sha256:%064x", versionI.Major*1000000+versionI.Minor*1000+versionI.Patch),
@@ -680,7 +680,7 @@ func (s *Server) generateSmokeTestGraph(queriedVersion semver.Version, arch stri
 			"url": fmt.Sprintf("https://access.redhat.com/errata/RHSA-2024:%05d", versionI.Major*1000+versionI.Minor*100+versionI.Patch),
 		},
 	}
-	
+
 	nodeJ := Node{
 		Version: versionJ,
 		Image:   fmt.Sprintf("quay.io/openshift-release-dev/ocp-release@sha256:%064x", versionJ.Major*1000000+versionJ.Minor*1000+versionJ.Patch),
@@ -690,7 +690,7 @@ func (s *Server) generateSmokeTestGraph(queriedVersion semver.Version, arch stri
 			"url": fmt.Sprintf("https://access.redhat.com/errata/RHSA-2024:%05d", versionJ.Major*1000+versionJ.Minor*100+versionJ.Patch),
 		},
 	}
-	
+
 	nodeK := Node{
 		Version: versionK,
 		Image:   fmt.Sprintf("quay.io/openshift-release-dev/ocp-release@sha256:%064x", versionK.Major*1000000+versionK.Minor*1000+versionK.Patch),
@@ -700,7 +700,7 @@ func (s *Server) generateSmokeTestGraph(queriedVersion semver.Version, arch stri
 			"url": fmt.Sprintf("https://access.redhat.com/errata/RHSA-2024:%05d", versionK.Major*1000+versionK.Minor*100+versionK.Patch),
 		},
 	}
-	
+
 	nodeL := Node{
 		Version: versionL,
 		Image:   fmt.Sprintf("quay.io/openshift-release-dev/ocp-release@sha256:%064x", versionL.Major*1000000+versionL.Minor*1000+versionL.Patch),
@@ -710,7 +710,7 @@ func (s *Server) generateSmokeTestGraph(queriedVersion semver.Version, arch stri
 			"url": fmt.Sprintf("https://access.redhat.com/errata/RHSA-2024:%05d", versionL.Major*1000+versionL.Minor*100+versionL.Patch),
 		},
 	}
-	
+
 	nodeM := Node{
 		Version: versionM,
 		Image:   fmt.Sprintf("quay.io/openshift-release-dev/ocp-release@sha256:%064x", versionM.Major*1000000+versionM.Minor*1000+versionM.Patch),
@@ -720,7 +720,7 @@ func (s *Server) generateSmokeTestGraph(queriedVersion semver.Version, arch stri
 			"url": fmt.Sprintf("https://access.redhat.com/errata/RHSA-2024:%05d", versionM.Major*1000+versionM.Minor*100+versionM.Patch),
 		},
 	}
-	
+
 	nodeN := Node{
 		Version: versionN,
 		Image:   fmt.Sprintf("quay.io/openshift-release-dev/ocp-release@sha256:%064x", versionN.Major*1000000+versionN.Minor*1000+versionN.Patch),
@@ -730,7 +730,7 @@ func (s *Server) generateSmokeTestGraph(queriedVersion semver.Version, arch stri
 			"url": fmt.Sprintf("https://access.redhat.com/errata/RHSA-2024:%05d", versionN.Major*1000+versionN.Minor*100+versionN.Patch),
 		},
 	}
-	
+
 	nodeO := Node{
 		Version: versionO,
 		Image:   fmt.Sprintf("quay.io/openshift-release-dev/ocp-release@sha256:%064x", versionO.Major*1000000+versionO.Minor*1000+versionO.Patch),
@@ -740,7 +740,7 @@ func (s *Server) generateSmokeTestGraph(queriedVersion semver.Version, arch stri
 			"url": fmt.Sprintf("https://access.redhat.com/errata/RHSA-2024:%05d", versionO.Major*1000+versionO.Minor*100+versionO.Patch),
 		},
 	}
-	
+
 	nodeP := Node{
 		Version: versionP,
 		Image:   fmt.Sprintf("quay.io/openshift-release-dev/ocp-release@sha256:%064x", versionP.Major*1000000+versionP.Minor*1000+versionP.Patch),
@@ -918,7 +918,7 @@ func (s *Server) generateEmptyGraph() Graph {
 // as more channels are added that include the queried version in their graphs
 func (s *Server) getChannelsContainingVersion(version semver.Version) []string {
 	var channels []string
-	
+
 	// Channels that contain the queried version
 	channels = append(channels, "channel-head")
 	channels = append(channels, "risks-always")
@@ -926,9 +926,9 @@ func (s *Server) getChannelsContainingVersion(version semver.Version) []string {
 	channels = append(channels, "risks-nonmatching")
 	channels = append(channels, "simple")
 	channels = append(channels, "smoke-test")
-	
+
 	// Future channels that contain the queried version will be added here
-	
+
 	return channels
 }
 
@@ -960,7 +960,7 @@ func (s *Server) generateRootHTML(host string) string {
 		"Three-node graph with PromQL conditional edges that don't match (PromQL: vector(0)).",
 		"Comprehensive 13-node graph with mixed conditional edges for testing all Cincinnati features.",
 	}
-	
+
 	var channels []ChannelInfo
 	for i, name := range channelNames {
 		curlCmd := fmt.Sprintf(`curl "%s?channel=%s&version=%s&arch=amd64"`, apiURL, name, exampleVersion)
@@ -1096,7 +1096,7 @@ func (s *Server) graphToASCII(graph Graph) string {
 	}
 
 	var result strings.Builder
-	
+
 	// Show nodes
 	result.WriteString("Nodes:\n")
 	for i, node := range graph.Nodes {
@@ -1106,7 +1106,7 @@ func (s *Server) graphToASCII(graph Graph) string {
 		}
 		result.WriteString(fmt.Sprintf("  [%d] %s\n", i, versionStr))
 	}
-	
+
 	// Show unconditional edges
 	if len(graph.Edges) > 0 {
 		result.WriteString("\nUnconditional Edges:\n")
@@ -1122,7 +1122,7 @@ func (s *Server) graphToASCII(graph Graph) string {
 			result.WriteString(fmt.Sprintf("  %s → %s\n", fromVersion, toVersion))
 		}
 	}
-	
+
 	// Show conditional edges with risks
 	if len(graph.ConditionalEdges) > 0 {
 		result.WriteString("\nConditional Edges:\n")
@@ -1153,11 +1153,11 @@ func (s *Server) graphToASCII(graph Graph) string {
 			}
 		}
 	}
-	
+
 	// ASCII diagram for graphs (simple for small, summary for large)
 	result.WriteString("\nGraph Visualization:\n")
 	result.WriteString(s.simpleGraphDiagram(graph))
-	
+
 	return result.String()
 }
 
@@ -1165,7 +1165,7 @@ func (s *Server) simpleGraphDiagram(graph Graph) string {
 	if len(graph.Nodes) == 0 {
 		return "No nodes"
 	}
-	
+
 	// Use tree-like visualization for all graphs
 	return s.complexGraphDiagram(graph)
 }
@@ -1174,30 +1174,29 @@ func (s *Server) complexGraphDiagram(graph Graph) string {
 	if len(graph.Nodes) == 0 {
 		return "Empty graph"
 	}
-	
+
 	// Use the tree-like visualization for all graphs
 	return s.renderASCIIDAG(graph)
 }
-
 
 func (s *Server) renderASCIIDAG(graph Graph) string {
 	if len(graph.Nodes) == 0 {
 		return "Empty graph"
 	}
-	
+
 	// Build adjacency list from unconditional edges
 	adj := make(map[int][]int)
 	for _, edge := range graph.Edges {
 		adj[edge[0]] = append(adj[edge[0]], edge[1])
 	}
-	
+
 	// Build conditional adjacency list with risk info
 	conditionalAdj := make(map[int][]ConditionalChild)
 	versionToIndex := make(map[string]int)
 	for i, node := range graph.Nodes {
 		versionToIndex[node.Version.String()] = i
 	}
-	
+
 	for _, condEdge := range graph.ConditionalEdges {
 		var riskName string
 		if len(condEdge.Risks) > 0 {
@@ -1210,7 +1209,7 @@ func (s *Server) renderASCIIDAG(graph Graph) string {
 			}
 			riskName = strings.Join(riskStrs, ",")
 		}
-		
+
 		for _, edge := range condEdge.Edges {
 			fromIdx := versionToIndex[edge.From]
 			toIdx := versionToIndex[edge.To]
@@ -1220,7 +1219,7 @@ func (s *Server) renderASCIIDAG(graph Graph) string {
 			})
 		}
 	}
-	
+
 	// Sanity check: verify this is a tree-like structure
 	// Count total incoming edges (unconditional + conditional) for each node
 	totalInDegree := make([]int, len(graph.Nodes))
@@ -1234,7 +1233,7 @@ func (s *Server) renderASCIIDAG(graph Graph) string {
 			totalInDegree[condChild.NodeIndex]++
 		}
 	}
-	
+
 	// Check if any node has more than one incoming edge (multiple parents)
 	multiParentNodes := []string{}
 	for i, inDegree := range totalInDegree {
@@ -1246,16 +1245,16 @@ func (s *Server) renderASCIIDAG(graph Graph) string {
 			multiParentNodes = append(multiParentNodes, version)
 		}
 	}
-	
+
 	var result strings.Builder
 	if len(multiParentNodes) > 0 {
 		result.WriteString("Complex DAG with multiple paths to same nodes:\n\n")
-		result.WriteString(fmt.Sprintf("Cannot visualize as tree - nodes with multiple parents: %s\n\n", 
+		result.WriteString(fmt.Sprintf("Cannot visualize as tree - nodes with multiple parents: %s\n\n",
 			strings.Join(multiParentNodes, ", ")))
 		result.WriteString("Graph summary:\n")
-		result.WriteString(fmt.Sprintf("- %d nodes, %d unconditional edges, %d conditional edge groups\n", 
+		result.WriteString(fmt.Sprintf("- %d nodes, %d unconditional edges, %d conditional edge groups\n",
 			len(graph.Nodes), len(graph.Edges), len(graph.ConditionalEdges)))
-		
+
 		// Show key nodes
 		result.WriteString("- Key nodes: ")
 		keyNodes := []string{}
@@ -1273,10 +1272,10 @@ func (s *Server) renderASCIIDAG(graph Graph) string {
 		result.WriteString(strings.Join(keyNodes, ", ") + "\n")
 		return result.String()
 	}
-	
+
 	// It's tree-like, proceed with tree visualization
 	result.WriteString("Complete DAG structure (tree-like):\n\n")
-	
+
 	// Find root nodes (no incoming edges)
 	roots := []int{}
 	for i, degree := range totalInDegree {
@@ -1284,7 +1283,7 @@ func (s *Server) renderASCIIDAG(graph Graph) string {
 			roots = append(roots, i)
 		}
 	}
-	
+
 	// Render each root as a tree with both unconditional and conditional edges
 	visited := make(map[int]bool)
 	for i, root := range roots {
@@ -1293,7 +1292,7 @@ func (s *Server) renderASCIIDAG(graph Graph) string {
 		}
 		s.renderCompleteTreeFromNode(&result, root, adj, conditionalAdj, graph.Nodes, visited, "")
 	}
-	
+
 	return result.String()
 }
 
@@ -1307,18 +1306,18 @@ func (s *Server) renderCompleteTreeFromNode(result *strings.Builder, nodeIdx int
 		return
 	}
 	visited[nodeIdx] = true
-	
+
 	// Format node name
 	version := nodes[nodeIdx].Version.String()
 	if version == "4.18.42" {
 		version = "<strong>" + version + "</strong>"
 	}
-	
+
 	result.WriteString(prefix + version + "\n")
-	
+
 	// Get all children (unconditional + conditional)
 	var allChildren []ChildInfo
-	
+
 	// Add unconditional children
 	for _, child := range adj[nodeIdx] {
 		allChildren = append(allChildren, ChildInfo{
@@ -1327,7 +1326,7 @@ func (s *Server) renderCompleteTreeFromNode(result *strings.Builder, nodeIdx int
 			RiskName:      "",
 		})
 	}
-	
+
 	// Add conditional children
 	for _, condChild := range conditionalAdj[nodeIdx] {
 		allChildren = append(allChildren, ChildInfo{
@@ -1336,12 +1335,12 @@ func (s *Server) renderCompleteTreeFromNode(result *strings.Builder, nodeIdx int
 			RiskName:      condChild.RiskName,
 		})
 	}
-	
+
 	// Draw all children
 	for i, child := range allChildren {
 		var childPrefix string
 		var nextPrefix string
-		
+
 		if i == len(allChildren)-1 {
 			// Last child
 			if child.IsConditional {
@@ -1359,7 +1358,7 @@ func (s *Server) renderCompleteTreeFromNode(result *strings.Builder, nodeIdx int
 			}
 			nextPrefix = prefix + "│   "
 		}
-		
+
 		// Draw the child node
 		s.renderCompleteTreeFromNodeHelper(result, child.NodeIndex, adj, conditionalAdj, nodes, visited, childPrefix, nextPrefix)
 	}
@@ -1376,18 +1375,18 @@ func (s *Server) renderCompleteTreeFromNodeHelper(result *strings.Builder, nodeI
 		return
 	}
 	visited[nodeIdx] = true
-	
+
 	// Format node name
 	version := nodes[nodeIdx].Version.String()
 	if version == "4.18.42" {
 		version = "<strong>" + version + "</strong>"
 	}
-	
+
 	result.WriteString(currentPrefix + version + "\n")
-	
+
 	// Get all children (unconditional + conditional)
 	var allChildren []ChildInfo
-	
+
 	// Add unconditional children
 	for _, child := range adj[nodeIdx] {
 		allChildren = append(allChildren, ChildInfo{
@@ -1396,7 +1395,7 @@ func (s *Server) renderCompleteTreeFromNodeHelper(result *strings.Builder, nodeI
 			RiskName:      "",
 		})
 	}
-	
+
 	// Add conditional children
 	for _, condChild := range conditionalAdj[nodeIdx] {
 		allChildren = append(allChildren, ChildInfo{
@@ -1405,12 +1404,12 @@ func (s *Server) renderCompleteTreeFromNodeHelper(result *strings.Builder, nodeI
 			RiskName:      condChild.RiskName,
 		})
 	}
-	
+
 	// Draw all children
 	for i, child := range allChildren {
 		var childPrefix string
 		var grandChildPrefix string
-		
+
 		if i == len(allChildren)-1 {
 			// Last child
 			if child.IsConditional {
@@ -1428,11 +1427,10 @@ func (s *Server) renderCompleteTreeFromNodeHelper(result *strings.Builder, nodeI
 			}
 			grandChildPrefix = nextPrefix + "│   "
 		}
-		
+
 		s.renderCompleteTreeFromNodeHelper(result, child.NodeIndex, adj, conditionalAdj, nodes, visited, childPrefix, grandChildPrefix)
 	}
 }
-
 
 func (s *Server) handleRoot(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
@@ -1446,7 +1444,7 @@ func (s *Server) handleRoot(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	
+
 	html := s.generateRootHTML(r.Host)
 	w.Write([]byte(html))
 }

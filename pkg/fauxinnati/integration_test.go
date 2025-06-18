@@ -4,6 +4,7 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"regexp"
 	"sync"
 	"sync/atomic"
 	"testing"
@@ -18,6 +19,7 @@ func TestServer_Integration(t *testing.T) {
 		url            string
 		headers        map[string]string
 		expectedStatus int
+		filters        map[string]regexp.Regexp
 	}{
 		{
 			name:           "successful graph request: any-unknown-channel channel",
@@ -69,6 +71,15 @@ func TestServer_Integration(t *testing.T) {
 			headers:        map[string]string{"Accept": "application/json"},
 			expectedStatus: 200,
 		},
+		{
+			name:           "successful UI request",
+			url:            "/",
+			headers:        map[string]string{"Accept": "test/html"},
+			expectedStatus: 200,
+			filters: map[string]regexp.Regexp{
+				"https://LOCALHOST:PORT": *regexp.MustCompile(`127\.0\.0\.1:\d+`),
+			},
+		},
 	}
 
 	for _, tt := range tests {
@@ -103,6 +114,9 @@ func TestServer_Integration(t *testing.T) {
 				body, err := io.ReadAll(resp.Body)
 				if err != nil {
 					t.Fatalf("Failed to read response body: %v", err)
+				}
+				for key, filter := range tt.filters {
+					body = filter.ReplaceAll(body, []byte(key))
 				}
 				testhelper.CompareWithFixture(t, body)
 			}
