@@ -941,9 +941,9 @@ func (s *Server) formatChannelsForMetadata(version semver.Version) string {
 }
 
 func (s *Server) generateRootHTML(host string) string {
-	baseURL := fmt.Sprintf("http://%s", host)
+	baseURL := fmt.Sprintf("https://%s", host)
 	if host == "" {
-		baseURL = "http://localhost:8080"
+		baseURL = "https://localhost:8080"
 	}
 
 	apiURL := fmt.Sprintf("%s/api/upgrades_info/graph", baseURL)
@@ -1019,7 +1019,7 @@ func (s *Server) generateRootHTML(host string) string {
     <div class="channel">
         <h3>{{.Name}}</h3>
         <p>{{.Description}}</p>
-        <div class="example">{{.Example}}</div>
+        <div class="example">{{.Example | safeHTML}}</div>
         <p><strong>Try it:</strong> <code>{{.CurlCommand}}</code> 
         <button class="copy-button" onclick="copyToClipboard('{{.CurlCommand}}')">Copy</button></p>
     </div>
@@ -1048,7 +1048,11 @@ func (s *Server) generateRootHTML(host string) string {
 		Channels:       channels,
 	}
 
-	t := template.Must(template.New("root").Parse(tmpl))
+	t := template.Must(template.New("root").Funcs(template.FuncMap{
+		"safeHTML": func(s string) template.HTML {
+			return template.HTML(s)
+		},
+	}).Parse(tmpl))
 	var buf strings.Builder
 	if err := t.Execute(&buf, data); err != nil {
 		return fmt.Sprintf("<html><body><h1>Error generating page: %v</h1></body></html>", err)
@@ -1096,7 +1100,11 @@ func (s *Server) graphToASCII(graph Graph) string {
 	// Show nodes
 	result.WriteString("Nodes:\n")
 	for i, node := range graph.Nodes {
-		result.WriteString(fmt.Sprintf("  [%d] %s\n", i, node.Version.String()))
+		versionStr := node.Version.String()
+		if versionStr == "4.18.42" {
+			versionStr = "<strong>" + versionStr + "</strong>"
+		}
+		result.WriteString(fmt.Sprintf("  [%d] %s\n", i, versionStr))
 	}
 	
 	// Show unconditional edges
@@ -1105,6 +1113,12 @@ func (s *Server) graphToASCII(graph Graph) string {
 		for _, edge := range graph.Edges {
 			fromVersion := graph.Nodes[edge[0]].Version.String()
 			toVersion := graph.Nodes[edge[1]].Version.String()
+			if fromVersion == "4.18.42" {
+				fromVersion = "<strong>" + fromVersion + "</strong>"
+			}
+			if toVersion == "4.18.42" {
+				toVersion = "<strong>" + toVersion + "</strong>"
+			}
 			result.WriteString(fmt.Sprintf("  %s → %s\n", fromVersion, toVersion))
 		}
 	}
@@ -1114,7 +1128,15 @@ func (s *Server) graphToASCII(graph Graph) string {
 		result.WriteString("\nConditional Edges:\n")
 		for _, condEdge := range graph.ConditionalEdges {
 			for _, edge := range condEdge.Edges {
-				result.WriteString(fmt.Sprintf("  %s ⇢ %s", edge.From, edge.To))
+				fromVersion := edge.From
+				toVersion := edge.To
+				if fromVersion == "4.18.42" {
+					fromVersion = "<strong>" + fromVersion + "</strong>"
+				}
+				if toVersion == "4.18.42" {
+					toVersion = "<strong>" + toVersion + "</strong>"
+				}
+				result.WriteString(fmt.Sprintf("  %s ⇢ %s", fromVersion, toVersion))
 				if len(condEdge.Risks) > 0 {
 					risk := condEdge.Risks[0] // Show first risk for simplicity
 					if len(risk.MatchingRules) > 0 {
@@ -1160,6 +1182,9 @@ func (s *Server) simpleGraphDiagram(graph Graph) string {
 		}
 		
 		if hasLinearEdges {
+			if n0 == "4.18.42" { n0 = "<strong>" + n0 + "</strong>" }
+			if n1 == "4.18.42" { n1 = "<strong>" + n1 + "</strong>" }
+			if n2 == "4.18.42" { n2 = "<strong>" + n2 + "</strong>" }
 			return fmt.Sprintf("  %s → %s → %s", n0, n1, n2)
 		}
 		
@@ -1172,6 +1197,9 @@ func (s *Server) simpleGraphDiagram(graph Graph) string {
 		}
 		
 		if hasBranchingEdges {
+			if n0 == "4.18.42" { n0 = "<strong>" + n0 + "</strong>" }
+			if n1 == "4.18.42" { n1 = "<strong>" + n1 + "</strong>" }
+			if n2 == "4.18.42" { n2 = "<strong>" + n2 + "</strong>" }
 			return fmt.Sprintf("      %s\n     ↗\n  %s\n     ↘\n      %s", n1, n0, n2)
 		}
 	}
@@ -1185,7 +1213,11 @@ func (s *Server) simpleGraphDiagram(graph Graph) string {
 	// Default: just list versions
 	var versions []string
 	for _, node := range graph.Nodes {
-		versions = append(versions, node.Version.String())
+		versionStr := node.Version.String()
+		if versionStr == "4.18.42" {
+			versionStr = "<strong>" + versionStr + "</strong>"
+		}
+		versions = append(versions, versionStr)
 	}
 	return strings.Join(versions, " → ")
 }
