@@ -21,8 +21,11 @@ An enhanced OpenShift login script that integrates with Kerberos authentication 
 # With custom Kerberos user
 ./oc-login-token.fish --user myuser
 
-# With custom SSO provider
+# Add additional SSO providers (to default list)
 ./oc-login-token.fish --provider my-sso-provider
+
+# Add multiple additional providers
+./oc-login-token.fish --provider provider1 --provider provider2
 
 # Get help
 ./oc-login-token.fish --help
@@ -32,6 +35,8 @@ An enhanced OpenShift login script that integrates with Kerberos authentication 
 - Automatic Kerberos ticket validation and renewal
 - Interactive context selection from existing kubeconfig contexts
 - Automatic token retrieval using `ocp-sso-token`
+- Multi-provider SSO support with configurable provider list
+- Default providers: RedHat_Internal_SSO, redhat-sso (easily extendable)
 - Token refresh for existing contexts (no new context creation)
 - Comprehensive error handling and user feedback
 - Modern terminal UI with colors and styling

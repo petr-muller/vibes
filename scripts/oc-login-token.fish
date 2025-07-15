@@ -17,15 +17,15 @@ set -l red "#DC322F"
 function oc-login-token --description "Enhanced OpenShift login with token using gum and Kerberos"
     # Default values
     set -l default_krb_user "pmuller"
-    set -l default_provider "redhat-sso"
+    set -l default_providers "RedHat_Internal_SSO" "redhat-sso"
     
     # Parse command line arguments
-    argparse 'u/user=' 'p/provider=' 'h/help' -- $argv
+    argparse 'u/user=' 'p/provider=+' 'h/help' -- $argv
     or return 1
     
     # Declare variables at function level first
     set -l krb_user
-    set -l provider
+    set -l providers
     
     # Set defaults after parsing, with command line overrides
     if set -q _flag_user
@@ -34,10 +34,12 @@ function oc-login-token --description "Enhanced OpenShift login with token using
         set krb_user $default_krb_user
     end
     
+    # Start with default providers
+    set providers $default_providers
+    
+    # Add any additional providers from command line
     if set -q _flag_provider
-        set provider $_flag_provider
-    else
-        set provider $default_provider
+        set providers $providers $_flag_provider
     end
     
     if set -q _flag_help
@@ -45,8 +47,14 @@ function oc-login-token --description "Enhanced OpenShift login with token using
         echo ""
         echo "Options:"
         echo "  -u, --user USER      Kerberos username (default: pmuller)"
-        echo "  -p, --provider PROVIDER  SSO provider name (default: redhat-sso)"
+        echo "  -p, --provider PROVIDER  Add SSO provider name (can be used multiple times)"
+        echo "                       Default providers: RedHat_Internal_SSO, redhat-sso"
         echo "  -h, --help           Show this help message"
+        echo ""
+        echo "Examples:"
+        echo "  oc-login-token                    # Use default providers"
+        echo "  oc-login-token --provider custom # Add 'custom' to default providers"
+        echo "  oc-login-token -p sso1 -p sso2   # Add multiple additional providers"
         return 0
     end
     
@@ -148,7 +156,13 @@ function oc-login-token --description "Enhanced OpenShift login with token using
     echo ""
     gum style --foreground=$blue --bold "Obtaining OAuth token..."
     
-    set -l token (ocp-sso-token --identity-providers $provider $api_url)
+    # Convert providers list to comma-separated string
+    set -l providers_str (string join "," $providers)
+    gum style --foreground=$blue "Trying providers: $providers_str"
+    
+    echo "Running command: ocp-sso-token --identity-providers $providers_str $api_url"
+    
+    set -l token (ocp-sso-token --identity-providers $providers_str $api_url)
     set -l ocp_status $status
     
     if test $ocp_status -ne 0 -o -z "$token"
