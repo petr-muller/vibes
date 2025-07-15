@@ -2,6 +2,47 @@
 
 This directory contains utility scripts for OpenShift development and testing.
 
+## oc-login-token.fish
+
+An enhanced OpenShift login script that integrates with Kerberos authentication and uses `ocp-sso-token` for automatic token retrieval. Features a modern terminal UI with `gum` for better user experience.
+
+**Requirements:**
+- `gum` (terminal UI library)
+- `oc` (OpenShift CLI)
+- `ocp-sso-token` (OAuth token retrieval tool)
+- `klist` and `kinit` (Kerberos tools)
+- `yq` (YAML processor)
+
+**Usage:**
+```bash
+# Basic usage (interactive context selection)
+./oc-login-token.fish
+
+# With custom Kerberos user
+./oc-login-token.fish --user myuser
+
+# With custom SSO provider
+./oc-login-token.fish --provider my-sso-provider
+
+# Get help
+./oc-login-token.fish --help
+```
+
+**Features:**
+- Automatic Kerberos ticket validation and renewal
+- Interactive context selection from existing kubeconfig contexts
+- Automatic token retrieval using `ocp-sso-token`
+- Token refresh for existing contexts (no new context creation)
+- Comprehensive error handling and user feedback
+- Modern terminal UI with colors and styling
+
+**Function usage:**
+The script can also be sourced to provide the `oc-login-token` function:
+```fish
+source scripts/oc-login-token.fish
+oc-login-token --user myuser --provider my-provider
+```
+
 ## search-ci-failures.fish
 
 A Fish shell script that searches for failures in OpenShift CI jobs by scanning build logs from Google Cloud Storage. It searches through PR-based CI jobs and looks for specific patterns in the build logs, providing URLs to failed builds along with execution timestamps.
