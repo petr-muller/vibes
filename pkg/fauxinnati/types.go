@@ -73,9 +73,13 @@ func generateErrataURL(version semver.Version) string {
 
 // NewNode creates a new Node with standard OpenShift metadata for the given version and channel
 func NewNode(version semver.Version, channel string) Node {
+	return NewNodeWithPullSpec(version, channel, fmt.Sprintf("quay.io/openshift-release-dev/ocp-release@sha256:%s", generateImageSHA256(version)))
+}
+
+func NewNodeWithPullSpec(version semver.Version, channel string, pullSpec string) Node {
 	return Node{
 		Version: version,
-		Image:   fmt.Sprintf("quay.io/openshift-release-dev/ocp-release@sha256:%s", generateImageSHA256(version)),
+		Image:   pullSpec,
 		Metadata: map[string]string{
 			"io.openshift.upgrades.graph.release.channels":    channel,
 			"io.openshift.upgrades.graph.release.manifestref": generateManifestRef(version),

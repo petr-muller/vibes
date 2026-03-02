@@ -9,15 +9,29 @@ import (
 	"strings"
 
 	"github.com/blang/semver/v4"
+	"github.com/hashicorp/go-retryablehttp"
+	"github.com/sirupsen/logrus"
 )
 
+type Client interface {
+	Do(req *http.Request) (*http.Response, error)
+}
+
 type Server struct {
-	mux *http.ServeMux
+	mux              *http.ServeMux
+	pullSpecResolver PullSpecResolver
+	client           Client
+}
+
+type PullSpecResolver interface {
+	ResolvePullSpec(client Client, tag string, arch string) (string, error)
 }
 
 func NewServer() *Server {
 	s := &Server{
-		mux: http.NewServeMux(),
+		mux:              http.NewServeMux(),
+		client:           retryablehttp.NewClient().StandardClient(),
+		pullSpecResolver: &prereleasePullSpecResolver{},
 	}
 	s.setupRoutes()
 	return s
@@ -32,11 +46,17 @@ func (s *Server) setupRoutes() {
 
 func (s *Server) Start(port int) error {
 	addr := fmt.Sprintf(":%d", port)
-	fmt.Printf("Starting fauxinnati server on %s\n", addr)
+	logrus.WithField("address", addr).Info("Starting fauxinnati server")
 	return http.ListenAndServe(addr, s.mux)
 }
 
 func (s *Server) handleGraph(w http.ResponseWriter, r *http.Request) {
+	logrus.WithFields(logrus.Fields{
+		"address": r.RemoteAddr,
+		"method":  r.Method,
+		"url":     r.URL,
+	}).Debug("Access log.")
+
 	if r.Method != http.MethodGet {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
@@ -201,6 +221,12 @@ func (s *Server) generateRisksAlwaysGraph(queriedVersion semver.Version, arch st
 
 	nodeA := NewNodeWithChannelsMetadata(versionA, s.formatChannelsForMetadata(versionA))
 	nodeB := NewNode(versionB, channel)
+	pullSpec, err := s.pullSpecResolver.ResolvePullSpec(s.client, versionB.String(), arch)
+	if err == nil {
+		nodeB = NewNodeWithPullSpec(versionB, channel, pullSpec)
+	} else {
+		logrus.WithError(err).Warn("Failed to resolve pull spec.")
+	}
 	nodeC := NewNode(versionC, channel)
 
 	nodeA.SetArchitecture(arch)
