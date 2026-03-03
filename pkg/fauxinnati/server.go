@@ -220,13 +220,7 @@ func (s *Server) generateRisksAlwaysGraph(queriedVersion semver.Version, arch st
 	versionC.Pre = nil
 
 	nodeA := NewNodeWithChannelsMetadata(versionA, s.formatChannelsForMetadata(versionA))
-	nodeB := NewNode(versionB, channel)
-	pullSpec, err := s.pullSpecResolver.ResolvePullSpec(s.client, versionB.String(), arch)
-	if err == nil {
-		nodeB = NewNodeWithPullSpec(versionB, channel, pullSpec)
-	} else {
-		logrus.WithError(err).Warn("Failed to resolve pull spec.")
-	}
+	nodeB := NewNodeWithApproximatePullSpec(s.pullSpecResolver, s.client, versionB, channel, arch)
 	nodeC := NewNode(versionC, channel)
 
 	nodeA.SetArchitecture(arch)
@@ -266,6 +260,41 @@ func (s *Server) generateRisksAlwaysGraph(queriedVersion semver.Version, arch st
 		Edges:            []Edge{}, // No unconditional edges, only conditional
 		ConditionalEdges: conditionalEdges,
 	}
+}
+
+func NewNodeWithApproximatePullSpec(resolver PullSpecResolver, client Client, v semver.Version, channel, arch string) Node {
+	node := NewNode(v, channel)
+	pullSpec, err := resolver.ResolvePullSpec(client, v.String(), arch)
+	if err == nil {
+		node = NewNodeWithPullSpec(v, channel, pullSpec, nil)
+	} else {
+		// If resolving exact tag failed, we try to use the pull spec of the first engineer candidate
+		// This gives us some convenience to test before the first GA version is available
+		approximate := semver.Version{
+			Major: v.Major,
+			Minor: v.Minor,
+			Patch: 0,
+			Pre: []semver.PRVersion{
+				{
+					VersionStr: "ec.0",
+				},
+			},
+		}
+		logrus.WithField("version", v).WithField("approximate", approximate).WithError(err).
+			Warn("Failed to resolve pull spec and trying approximate.")
+		pullSpec, err = resolver.ResolvePullSpec(client, approximate.String(), arch)
+		if err == nil {
+			// The tag is still for the exact version but the pull spec is the first EC.
+			// We do not use the approximate tag because we want to ensure the tag is greater than the version from the cluster.
+			// We use an extra metadata to indicate it.
+			// I was told CVO trusts the graph enough and does not check if the version from the payload matches the claimed version.
+			node = NewNodeWithPullSpec(v, channel, pullSpec, map[string]string{"io.openshift.upgrades.fauxinnati.tag": approximate.String()})
+		} else {
+			logrus.WithError(err).WithField("version", v).WithField("approximate", approximate).
+				Warn("Failed to resolve approximate pull spec")
+		}
+	}
+	return node
 }
 
 func (s *Server) generateRisksMatchingGraph(queriedVersion semver.Version, arch string, channel string) Graph {
