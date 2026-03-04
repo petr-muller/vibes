@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"sort"
 	"strings"
+	"time"
 
 	"github.com/blang/semver/v4"
 	"github.com/hashicorp/go-retryablehttp"
@@ -28,9 +29,15 @@ type PullSpecResolver interface {
 }
 
 func NewServer() *Server {
+	client := retryablehttp.NewClient()
+	client.HTTPClient.Timeout = 30 * time.Second
+	client.RetryMax = 3
+	client.RetryWaitMin = 1 * time.Second
+	client.RetryWaitMax = 5 * time.Second
+
 	s := &Server{
 		mux:              http.NewServeMux(),
-		client:           retryablehttp.NewClient().StandardClient(),
+		client:           client.StandardClient(),
 		pullSpecResolver: &prereleasePullSpecResolver{},
 	}
 	s.setupRoutes()
@@ -263,6 +270,10 @@ func (s *Server) generateRisksAlwaysGraph(queriedVersion semver.Version, arch st
 }
 
 func NewNodeWithApproximatePullSpec(resolver PullSpecResolver, client Client, v semver.Version, channel, arch string) Node {
+	if arch == "" {
+		arch = "amd64"
+		logrus.WithField("arch", arch).Debug("No architecture specified. Using default to resolve the pull spec.")
+	}
 	node := NewNode(v, channel)
 	pullSpec, err := resolver.ResolvePullSpec(client, v.String(), arch)
 	if err == nil {
