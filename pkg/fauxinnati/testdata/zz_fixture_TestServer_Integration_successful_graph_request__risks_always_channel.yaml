@@ -11,7 +11,7 @@
     },
     {
       "version": "4.17.6",
-      "payload": "quay.io/openshift-release-dev/ocp-release@sha256:00000000000000000000000000000000000000000000000000000000003d4b6e",
+      "payload": "quay.io/openshift-release-dev/ocp-release@sha256:bf20c8c5122cf450b832e57759f3d3c75fb326e5386847e0ed4442cac4bc5596",
       "metadata": {
         "io.openshift.upgrades.graph.release.channels": "risks-always",
         "io.openshift.upgrades.graph.release.manifestref": "sha256:00000000000000000000000000000000000000000000000000000000003d4b6e",
