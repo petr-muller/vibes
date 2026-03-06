@@ -4,8 +4,10 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/petr-muller/vibes/pkg/fauxinnati"
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
+
+	"github.com/petr-muller/vibes/pkg/fauxinnati"
 )
 
 var (
@@ -30,6 +32,8 @@ func init() {
 }
 
 func main() {
+	// TODO: get the level from an arg
+	logrus.SetLevel(logrus.DebugLevel)
 	if err := rootCmd.Execute(); err != nil {
 		_, _ = fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 		os.Exit(1)

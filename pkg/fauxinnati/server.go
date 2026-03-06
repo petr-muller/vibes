@@ -7,17 +7,39 @@ import (
 	"net/http"
 	"sort"
 	"strings"
+	"time"
 
 	"github.com/blang/semver/v4"
+	"github.com/hashicorp/go-retryablehttp"
+	"github.com/sirupsen/logrus"
 )
 
+type Client interface {
+	Do(req *http.Request) (*http.Response, error)
+}
+
 type Server struct {
-	mux *http.ServeMux
+	mux              *http.ServeMux
+	pullSpecResolver PullSpecResolver
+	client           Client
+}
+
+type PullSpecResolver interface {
+	ResolvePullSpec(client Client, tag string, arch string) (string, error)
+	LatestCandidate(client Client, major, minor uint64) (semver.Version, error)
 }
 
 func NewServer() *Server {
+	client := retryablehttp.NewClient()
+	client.HTTPClient.Timeout = 30 * time.Second
+	client.RetryMax = 3
+	client.RetryWaitMin = 1 * time.Second
+	client.RetryWaitMax = 5 * time.Second
+
 	s := &Server{
-		mux: http.NewServeMux(),
+		mux:              http.NewServeMux(),
+		client:           client.StandardClient(),
+		pullSpecResolver: &prereleasePullSpecResolver{},
 	}
 	s.setupRoutes()
 	return s
@@ -32,11 +54,17 @@ func (s *Server) setupRoutes() {
 
 func (s *Server) Start(port int) error {
 	addr := fmt.Sprintf(":%d", port)
-	fmt.Printf("Starting fauxinnati server on %s\n", addr)
+	logrus.WithField("address", addr).Info("Starting fauxinnati server")
 	return http.ListenAndServe(addr, s.mux)
 }
 
 func (s *Server) handleGraph(w http.ResponseWriter, r *http.Request) {
+	logrus.WithFields(logrus.Fields{
+		"address": r.RemoteAddr,
+		"method":  r.Method,
+		"url":     r.URL,
+	}).Debug("Access log.")
+
 	if r.Method != http.MethodGet {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
@@ -193,6 +221,16 @@ func (s *Server) generateRisksAlwaysGraph(queriedVersion semver.Version, arch st
 	versionB.Patch++
 	versionB.Pre = nil
 
+	latest, err := s.pullSpecResolver.LatestCandidate(s.client, queriedVersion.Major, queriedVersion.Minor)
+	if err != nil {
+		logrus.WithError(err).WithField("version", queriedVersion).WithField("major.minor", fmt.Sprintf("%d.%d", queriedVersion.Minor, queriedVersion.Minor)).Warning("Fail to find the latest version")
+	} else if latest.LTE(queriedVersion) {
+		logrus.WithField("version", queriedVersion).WithField("latest", latest).Warning("The latest version is not greater")
+	} else if latest.LE(versionB) {
+		logrus.WithField("version", queriedVersion).WithField("latest", latest).Debug("Use the latest patch version")
+		versionB = latest
+	}
+
 	// C: Minor bumped by one, patch set to zero, drop prerelease
 	versionC := queriedVersion
 	versionC.Minor++
@@ -200,7 +238,8 @@ func (s *Server) generateRisksAlwaysGraph(queriedVersion semver.Version, arch st
 	versionC.Pre = nil
 
 	nodeA := NewNodeWithChannelsMetadata(versionA, s.formatChannelsForMetadata(versionA))
-	nodeB := NewNode(versionB, channel)
+
+	nodeB := NewNodeWithPullSpecResolver(s.pullSpecResolver, s.client, versionB, channel, arch)
 	nodeC := NewNode(versionC, channel)
 
 	nodeA.SetArchitecture(arch)
@@ -240,6 +279,19 @@ func (s *Server) generateRisksAlwaysGraph(queriedVersion semver.Version, arch st
 		Edges:            []Edge{}, // No unconditional edges, only conditional
 		ConditionalEdges: conditionalEdges,
 	}
+}
+
+func NewNodeWithPullSpecResolver(resolver PullSpecResolver, client Client, v semver.Version, channel, arch string) Node {
+	if arch == "" {
+		arch = "amd64"
+		logrus.WithField("arch", arch).Debug("No architecture specified. Using default to resolve the pull spec.")
+	}
+	node := NewNode(v, channel)
+	pullSpec, err := resolver.ResolvePullSpec(client, v.String(), arch)
+	if err == nil {
+		node = NewNodeWithPullSpec(v, channel, pullSpec, nil)
+	}
+	return node
 }
 
 func (s *Server) generateRisksMatchingGraph(queriedVersion semver.Version, arch string, channel string) Graph {
