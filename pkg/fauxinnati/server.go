@@ -45,6 +45,17 @@ func NewServer() *Server {
 	return s
 }
 
+func WithLogging(h http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		h.ServeHTTP(w, r)
+		logrus.WithFields(logrus.Fields{
+			"address": r.RemoteAddr,
+			"method":  r.Method,
+			"url":     r.URL,
+		}).Debug("Access log.")
+	})
+}
+
 func (s *Server) setupRoutes() {
 	s.mux.HandleFunc("/", s.handleRoot)
 	s.mux.HandleFunc("/api/upgrades_info/graph", s.handleGraph)
@@ -55,16 +66,10 @@ func (s *Server) setupRoutes() {
 func (s *Server) Start(port int) error {
 	addr := fmt.Sprintf(":%d", port)
 	logrus.WithField("address", addr).Info("Starting fauxinnati server")
-	return http.ListenAndServe(addr, s.mux)
+	return http.ListenAndServe(addr, WithLogging(s.mux))
 }
 
 func (s *Server) handleGraph(w http.ResponseWriter, r *http.Request) {
-	logrus.WithFields(logrus.Fields{
-		"address": r.RemoteAddr,
-		"method":  r.Method,
-		"url":     r.URL,
-	}).Debug("Access log.")
-
 	if r.Method != http.MethodGet {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
