@@ -26,6 +26,7 @@ type Server struct {
 
 type PullSpecResolver interface {
 	ResolvePullSpec(client Client, tag string, arch string) (string, error)
+	LatestCandidate(client Client, major, minor uint64) (semver.Version, error)
 }
 
 func NewServer() *Server {
@@ -220,6 +221,16 @@ func (s *Server) generateRisksAlwaysGraph(queriedVersion semver.Version, arch st
 	versionB.Patch++
 	versionB.Pre = nil
 
+	latest, err := s.pullSpecResolver.LatestCandidate(s.client, queriedVersion.Major, queriedVersion.Minor)
+	if err != nil {
+		logrus.WithError(err).WithField("version", queriedVersion).WithField("major.minor", fmt.Sprintf("%d.%d", queriedVersion.Minor, queriedVersion.Minor)).Warning("Fail to find the latest version")
+	} else if latest.LTE(queriedVersion) {
+		logrus.WithField("version", queriedVersion).WithField("latest", latest).Warning("The latest version is not greater")
+	} else if latest.LE(versionB) {
+		logrus.WithField("version", queriedVersion).WithField("latest", latest).Debug("Use the latest patch version")
+		versionB = latest
+	}
+
 	// C: Minor bumped by one, patch set to zero, drop prerelease
 	versionC := queriedVersion
 	versionC.Minor++
@@ -227,7 +238,8 @@ func (s *Server) generateRisksAlwaysGraph(queriedVersion semver.Version, arch st
 	versionC.Pre = nil
 
 	nodeA := NewNodeWithChannelsMetadata(versionA, s.formatChannelsForMetadata(versionA))
-	nodeB := NewNodeWithApproximatePullSpec(s.pullSpecResolver, s.client, versionB, channel, arch)
+
+	nodeB := NewNodeWithPullSpecResolver(s.pullSpecResolver, s.client, versionB, channel, arch)
 	nodeC := NewNode(versionC, channel)
 
 	nodeA.SetArchitecture(arch)
@@ -269,7 +281,7 @@ func (s *Server) generateRisksAlwaysGraph(queriedVersion semver.Version, arch st
 	}
 }
 
-func NewNodeWithApproximatePullSpec(resolver PullSpecResolver, client Client, v semver.Version, channel, arch string) Node {
+func NewNodeWithPullSpecResolver(resolver PullSpecResolver, client Client, v semver.Version, channel, arch string) Node {
 	if arch == "" {
 		arch = "amd64"
 		logrus.WithField("arch", arch).Debug("No architecture specified. Using default to resolve the pull spec.")
@@ -278,32 +290,6 @@ func NewNodeWithApproximatePullSpec(resolver PullSpecResolver, client Client, v 
 	pullSpec, err := resolver.ResolvePullSpec(client, v.String(), arch)
 	if err == nil {
 		node = NewNodeWithPullSpec(v, channel, pullSpec, nil)
-	} else {
-		// If resolving exact tag failed, we try to use the pull spec of the first engineer candidate
-		// This gives us some convenience to test before the first GA version is available
-		approximate := semver.Version{
-			Major: v.Major,
-			Minor: v.Minor,
-			Patch: 0,
-			Pre: []semver.PRVersion{
-				{
-					VersionStr: "ec.0",
-				},
-			},
-		}
-		logrus.WithField("version", v).WithField("approximate", approximate).WithError(err).
-			Warn("Failed to resolve pull spec and trying approximate.")
-		pullSpec, err = resolver.ResolvePullSpec(client, approximate.String(), arch)
-		if err == nil {
-			// The tag is still for the exact version but the pull spec is the first EC.
-			// We do not use the approximate tag because we want to ensure the tag is greater than the version from the cluster.
-			// We use an extra metadata to indicate it.
-			// I was told CVO trusts the graph enough and does not check if the version from the payload matches the claimed version.
-			node = NewNodeWithPullSpec(v, channel, pullSpec, map[string]string{"io.openshift.upgrades.fauxinnati.tag": approximate.String()})
-		} else {
-			logrus.WithError(err).WithField("version", v).WithField("approximate", approximate).
-				Warn("Failed to resolve approximate pull spec")
-		}
 	}
 	return node
 }
