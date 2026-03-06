@@ -6,6 +6,7 @@ import (
 
 	"github.com/blang/semver/v4"
 	"github.com/google/go-cmp/cmp"
+
 	"github.com/petr-muller/vibes/pkg/testhelper"
 )
 

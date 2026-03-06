@@ -15,9 +15,11 @@ import (
 
 	"github.com/blang/semver/v4"
 	"github.com/google/uuid"
+
+	"k8s.io/klog/v2"
+
 	configv1 "github.com/openshift/api/config/v1"
 	"github.com/openshift/cluster-version-operator/pkg/clusterconditions"
-	"k8s.io/klog/v2"
 )
 
 const (
