@@ -1,5 +1,5 @@
 refresh-fixture-inputs:
-    curl 'https://api.openshift.com/api/upgrades_info/graph?channel=candidate-4.20' > pkg/fauxinnati/testdata/zz_fixture_TestGraph_JSONcandidate_4.20.json.input
+    curl -s 'https://api.openshift.com/api/upgrades_info/graph?channel=candidate-4.20' > pkg/fauxinnati/testdata/zz_fixture_TestGraph_JSONcandidate_4.20.json.input
 
 # Build container images
 images:
@@ -78,3 +78,21 @@ deploy-fauxinnati:
     oc process -f deploy/fauxinnati/01-deployment.yaml --param IMAGE_DIGEST="${image_digest}" | oc apply -n fauxinnati -f -
     oc apply -f deploy/fauxinnati/02-service.yaml
     oc apply -f deploy/fauxinnati/03-route.yaml
+
+test:
+    go test ./...
+
+fmt:
+    go fmt ./...
+
+tidy:
+    go mod tidy
+
+import:
+    which gci || go install -mod=mod github.com/daixiang0/gci@latest
+    gci write --custom-order -s standard -s default -s "prefix(k8s.io)" -s "prefix(github.com/openshift)" -s localmodule --skip-vendor .
+
+verify-generate: tidy fmt import
+    git diff --exit-code
+
+verify: verify-generate test
