@@ -19,9 +19,9 @@ type Client interface {
 }
 
 type Server struct {
-	mux              *http.ServeMux
-	pullSpecResolver PullSpecResolver
-	client           Client
+	mux            *http.ServeMux
+	digestResolver DigestResolver
+	client         Client
 }
 
 type PullSpecResolver interface {
@@ -37,9 +37,9 @@ func NewServer() *Server {
 	client.RetryWaitMax = 5 * time.Second
 
 	s := &Server{
-		mux:              http.NewServeMux(),
-		client:           client.StandardClient(),
-		pullSpecResolver: &prereleasePullSpecResolver{},
+		mux:            http.NewServeMux(),
+		client:         client.StandardClient(),
+		digestResolver: &prereleaseDigestResolver{},
 	}
 	s.setupRoutes()
 	return s
@@ -226,16 +226,6 @@ func (s *Server) generateRisksAlwaysGraph(queriedVersion semver.Version, arch st
 	versionB.Patch++
 	versionB.Pre = nil
 
-	latest, err := s.pullSpecResolver.LatestCandidate(s.client, queriedVersion.Major, queriedVersion.Minor)
-	if err != nil {
-		logrus.WithError(err).WithField("version", queriedVersion).WithField("major.minor", fmt.Sprintf("%d.%d", queriedVersion.Minor, queriedVersion.Minor)).Warning("Fail to find the latest version")
-	} else if latest.LTE(queriedVersion) {
-		logrus.WithField("version", queriedVersion).WithField("latest", latest).Warning("The latest version is not greater")
-	} else if latest.LE(versionB) {
-		logrus.WithField("version", queriedVersion).WithField("latest", latest).Debug("Use the latest patch version")
-		versionB = latest
-	}
-
 	// C: Minor bumped by one, patch set to zero, drop prerelease
 	versionC := queriedVersion
 	versionC.Minor++
@@ -244,11 +234,10 @@ func (s *Server) generateRisksAlwaysGraph(queriedVersion semver.Version, arch st
 
 	nodeA := NewNodeWithChannelsMetadata(versionA, s.formatChannelsForMetadata(versionA))
 
-	nodeB := NewNodeWithPullSpecResolver(s.pullSpecResolver, s.client, versionB, channel, arch)
+	nodeB := NewNodeWithNodeBuilder(s.digestResolver, s.client, queriedVersion, versionB, []string{channel}, arch)
 	nodeC := NewNode(versionC, channel)
 
 	nodeA.SetArchitecture(arch)
-	nodeB.SetArchitecture(arch)
 	nodeC.SetArchitecture(arch)
 
 	// Create conditional edges with SyntheticRisk that applies always
@@ -286,17 +275,11 @@ func (s *Server) generateRisksAlwaysGraph(queriedVersion semver.Version, arch st
 	}
 }
 
-func NewNodeWithPullSpecResolver(resolver PullSpecResolver, client Client, v semver.Version, channel, arch string) Node {
-	if arch == "" {
-		arch = "amd64"
-		logrus.WithField("arch", arch).Debug("No architecture specified. Using default to resolve the pull spec.")
-	}
-	node := NewNode(v, channel)
-	pullSpec, err := resolver.ResolvePullSpec(client, v.String(), arch)
-	if err == nil {
-		node = NewNodeWithPullSpec(v, channel, pullSpec, nil)
-	}
-	return node
+func NewNodeWithNodeBuilder(resolver DigestResolver, client Client, queriedVersion, v semver.Version, channels []string, arch string) Node {
+	b := &NodeBuilder{}
+	b.WithArchitecture(arch).WithChannels(channels).WithVersion(v).withQueriedVersion(queriedVersion).
+		WithDigestResolver(resolver).WithClient(client).withGetLatest(LatestCandidate)
+	return b.Build()
 }
 
 func (s *Server) generateRisksMatchingGraph(queriedVersion semver.Version, arch string, channel string) Graph {

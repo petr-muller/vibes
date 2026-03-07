@@ -7,27 +7,19 @@ import (
 	"sort"
 
 	"github.com/blang/semver/v4"
-	"github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v3"
 
 	kerrors "k8s.io/apimachinery/pkg/util/errors"
 )
 
-type prereleasePullSpecResolver struct {
+type prereleaseDigestResolver struct {
 }
 
-func (r *prereleasePullSpecResolver) ResolvePullSpec(client Client, version string, arch string) (string, error) {
-	const prefix = "quay.io/openshift-release-dev/ocp-release"
+func (r *prereleaseDigestResolver) getRepository() string {
+	return "quay.io/openshift-release-dev/ocp-release"
+}
 
-	suffix := arch
-	switch arch {
-	case "amd64":
-		suffix = "x86_64"
-	case "arm64":
-		suffix = "aarch64"
-	}
-
-	tag := fmt.Sprintf("%s-%s", version, suffix)
+func (r *prereleaseDigestResolver) getDigest(client Client, tag string) (string, error) {
 	req, err := http.NewRequest(http.MethodHead, fmt.Sprintf("https://quay.io/v2/openshift-release-dev/ocp-release/manifests/%s", tag), nil)
 	if err != nil {
 		return "", err
@@ -49,13 +41,12 @@ func (r *prereleasePullSpecResolver) ResolvePullSpec(client Client, version stri
 	if digest == "" {
 		return "", fmt.Errorf("missing digest for url %s", req.URL)
 	}
-	logrus.WithField("tag", tag).WithField("digest", digest).Debug("Resolved pull spec")
-	return fmt.Sprintf("%s@%s", prefix, digest), nil
+	return digest, nil
 }
 
-func (r *prereleasePullSpecResolver) LatestCandidate(client Client, major, minor uint64) (semver.Version, error) {
+func LatestCandidate(client Client, major, minor uint64) (semver.Version, error) {
 	var ret semver.Version
-	versions, err := r.candidates(client, major, minor)
+	versions, err := candidates(client, major, minor)
 	if err != nil {
 		return ret, err
 	}
@@ -68,7 +59,7 @@ func (r *prereleasePullSpecResolver) LatestCandidate(client Client, major, minor
 	return versions[len(versions)-1], nil
 }
 
-func (r *prereleasePullSpecResolver) candidates(client Client, major, minor uint64) ([]semver.Version, error) {
+func candidates(client Client, major, minor uint64) ([]semver.Version, error) {
 	req, err := http.NewRequest(http.MethodGet, fmt.Sprintf("https://raw.githubusercontent.com/openshift/cincinnati-graph-data/refs/heads/master/channels/candidate-%d.%d.yaml", major, minor), nil)
 	if err != nil {
 		return nil, err
