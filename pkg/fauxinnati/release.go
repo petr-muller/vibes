@@ -5,14 +5,18 @@ import (
 	"io"
 	"net/http"
 	"sort"
+	"time"
 
 	"github.com/blang/semver/v4"
+	"github.com/patrickmn/go-cache"
+	"github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v3"
 
 	kerrors "k8s.io/apimachinery/pkg/util/errors"
 )
 
 type prereleaseDigestResolver struct {
+	cache Cache
 }
 
 func (r *prereleaseDigestResolver) getRepository() string {
@@ -20,6 +24,12 @@ func (r *prereleaseDigestResolver) getRepository() string {
 }
 
 func (r *prereleaseDigestResolver) getDigest(client Client, tag string) (string, error) {
+	key := fmt.Sprintf("%s-%s", "getDigest", tag)
+	if data, found := r.cache.Get(key); found {
+		logrus.WithField("key", key).Debug("Found digest in cache")
+		return data.(string), nil
+	}
+	logrus.WithField("key", key).Debug("Getting digest from quay.io ...")
 	req, err := http.NewRequest(http.MethodHead, fmt.Sprintf("https://quay.io/v2/openshift-release-dev/ocp-release/manifests/%s", tag), nil)
 	if err != nil {
 		return "", err
@@ -41,10 +51,21 @@ func (r *prereleaseDigestResolver) getDigest(client Client, tag string) (string,
 	if digest == "" {
 		return "", fmt.Errorf("missing digest for url %s", req.URL)
 	}
+	r.cache.Set(key, digest, cache.NoExpiration)
 	return digest, nil
 }
 
-func LatestCandidate(client Client, major, minor uint64) (semver.Version, error) {
+type latestCandidateGetter struct {
+	cache Cache
+}
+
+func (g *latestCandidateGetter) latestCandidate(client Client, major, minor uint64) (semver.Version, error) {
+	key := fmt.Sprintf("latestCandidate-%d.%d", major, minor)
+	if data, found := g.cache.Get(key); found {
+		logrus.WithField("key", key).Info("Found latest candidate in cache")
+		return data.(semver.Version), nil
+	}
+	logrus.WithField("key", key).Debug("Getting latest candidate from github.com ...")
 	var ret semver.Version
 	versions, err := candidates(client, major, minor)
 	if err != nil {
@@ -56,7 +77,9 @@ func LatestCandidate(client Client, major, minor uint64) (semver.Version, error)
 	sort.Slice(versions, func(i, j int) bool {
 		return versions[i].LT(versions[j])
 	})
-	return versions[len(versions)-1], nil
+	ret = versions[len(versions)-1]
+	g.cache.Set(key, ret, 60*time.Minute)
+	return ret, nil
 }
 
 func candidates(client Client, major, minor uint64) ([]semver.Version, error) {
