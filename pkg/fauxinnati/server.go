@@ -11,6 +11,7 @@ import (
 
 	"github.com/blang/semver/v4"
 	"github.com/hashicorp/go-retryablehttp"
+	"github.com/patrickmn/go-cache"
 	"github.com/sirupsen/logrus"
 )
 
@@ -19,14 +20,20 @@ type Client interface {
 }
 
 type Server struct {
-	mux            *http.ServeMux
-	digestResolver DigestResolver
-	client         Client
+	mux             *http.ServeMux
+	digestResolver  DigestResolver
+	latestCandidate func(client Client, major, minor uint64) (semver.Version, error)
+	client          Client
 }
 
 type PullSpecResolver interface {
 	ResolvePullSpec(client Client, tag string, arch string) (string, error)
 	LatestCandidate(client Client, major, minor uint64) (semver.Version, error)
+}
+
+type Cache interface {
+	Get(k string) (interface{}, bool)
+	Set(k string, x interface{}, d time.Duration)
 }
 
 func NewServer() *Server {
@@ -35,11 +42,13 @@ func NewServer() *Server {
 	client.RetryMax = 3
 	client.RetryWaitMin = 1 * time.Second
 	client.RetryWaitMax = 5 * time.Second
-
+	c := cache.New(5*time.Minute, 10*time.Minute)
+	latestCandidateGetter := latestCandidateGetter{cache: c}
 	s := &Server{
-		mux:            http.NewServeMux(),
-		client:         client.StandardClient(),
-		digestResolver: &prereleaseDigestResolver{},
+		mux:             http.NewServeMux(),
+		client:          client.StandardClient(),
+		digestResolver:  &prereleaseDigestResolver{cache: c},
+		latestCandidate: latestCandidateGetter.latestCandidate,
 	}
 	s.setupRoutes()
 	return s
@@ -47,12 +56,12 @@ func NewServer() *Server {
 
 func WithLogging(h http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		h.ServeHTTP(w, r)
 		logrus.WithFields(logrus.Fields{
 			"address": r.RemoteAddr,
 			"method":  r.Method,
 			"url":     r.URL,
 		}).Debug("Access log.")
+		h.ServeHTTP(w, r)
 	})
 }
 
@@ -234,7 +243,7 @@ func (s *Server) generateRisksAlwaysGraph(queriedVersion semver.Version, arch st
 
 	nodeA := NewNodeWithChannelsMetadata(versionA, s.formatChannelsForMetadata(versionA))
 
-	nodeB := NewNodeWithNodeBuilder(s.digestResolver, s.client, queriedVersion, versionB, []string{channel}, arch)
+	nodeB := NewNodeWithNodeBuilder(s.digestResolver, s.latestCandidate, s.client, queriedVersion, versionB, []string{channel}, arch)
 	nodeC := NewNode(versionC, channel)
 
 	nodeA.SetArchitecture(arch)
@@ -275,10 +284,10 @@ func (s *Server) generateRisksAlwaysGraph(queriedVersion semver.Version, arch st
 	}
 }
 
-func NewNodeWithNodeBuilder(resolver DigestResolver, client Client, queriedVersion, v semver.Version, channels []string, arch string) Node {
+func NewNodeWithNodeBuilder(resolver DigestResolver, latestCandidate func(client Client, major, minor uint64) (semver.Version, error), client Client, queriedVersion, v semver.Version, channels []string, arch string) Node {
 	b := &NodeBuilder{}
 	b.WithArchitecture(arch).WithChannels(channels).WithVersion(v).withQueriedVersion(queriedVersion).
-		WithDigestResolver(resolver).WithClient(client).withGetLatest(LatestCandidate)
+		WithDigestResolver(resolver).WithClient(client).withGetLatest(latestCandidate)
 	return b.Build()
 }
 

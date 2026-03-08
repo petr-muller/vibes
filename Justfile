@@ -88,11 +88,11 @@ fmt:
 tidy:
     go mod tidy
 
-import:
+imports:
     which gci || go install -mod=mod github.com/daixiang0/gci@latest
     gci write --custom-order -s standard -s default -s "prefix(k8s.io)" -s "prefix(github.com/openshift)" -s localmodule --skip-vendor .
 
-verify-generate: tidy fmt import
+verify-generate: tidy fmt imports
     git diff --exit-code
 
 verify: verify-generate test
