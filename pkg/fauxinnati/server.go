@@ -250,8 +250,8 @@ func (s *Server) generateRisksAlwaysGraph(queriedVersion semver.Version, arch st
 		{
 			Edges: []ConditionalUpdate{
 				{
-					From: versionA.String(),
-					To:   versionB.String(),
+					From: nodeA.Version.String(),
+					To:   nodeB.Version.String(),
 				},
 			},
 			Risks: []ConditionalUpdateRisk{
@@ -280,8 +280,8 @@ func (s *Server) generateRisksAlwaysGraph(queriedVersion semver.Version, arch st
 		{
 			Edges: []ConditionalUpdate{
 				{
-					From: versionA.String(),
-					To:   versionC.String(),
+					From: nodeA.Version.String(),
+					To:   nodeC.Version.String(),
 				},
 			},
 			Risks: []ConditionalUpdateRisk{
