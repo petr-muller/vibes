@@ -250,10 +250,10 @@ func TestServer_handleGraph(t *testing.T) {
 				if len(graph.Edges) != 0 {
 					t.Errorf("expected 0 edges in the graph, got %d", len(graph.Edges))
 				}
-				if len(graph.ConditionalEdges) != 1 {
-					t.Errorf("expected 1 conditional edge in the graph, got %d", len(graph.ConditionalEdges))
+				if len(graph.ConditionalEdges) != 2 {
+					t.Errorf("expected 2 conditional edge in the graph, got %d", len(graph.ConditionalEdges))
 				}
-				if diff := cmp.Diff([]string{"4.17.6(SyntheticRisk:Always)", "4.18.0(SyntheticRisk:Always)"}, conditionalEdgesFrom(graph, "4.17.5")); diff != "" {
+				if diff := cmp.Diff([]string{"4.17.6(SyntheticRiskA:Always|SyntheticRiskB:Always)", "4.18.0(SyntheticRiskA:Always|SyntheticRiskC:Always)"}, conditionalEdgesFrom(graph, "4.17.5")); diff != "" {
 					t.Errorf("conditional edges from 4.17.5 mismatch (-want +got):\n%s", diff)
 				}
 			},

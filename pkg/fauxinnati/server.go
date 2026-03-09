@@ -241,13 +241,9 @@ func (s *Server) generateRisksAlwaysGraph(queriedVersion semver.Version, arch st
 	versionC.Patch = 0
 	versionC.Pre = nil
 
-	nodeA := NewNodeWithChannelsMetadata(versionA, s.formatChannelsForMetadata(versionA))
-
+	nodeA := NewNodeWithNodeBuilder(s.digestResolver, s.latestCandidate, s.client, queriedVersion, versionA, s.getChannelsContainingVersion(versionA), arch)
 	nodeB := NewNodeWithNodeBuilder(s.digestResolver, s.latestCandidate, s.client, queriedVersion, versionB, []string{channel}, arch)
-	nodeC := NewNode(versionC, channel)
-
-	nodeA.SetArchitecture(arch)
-	nodeC.SetArchitecture(arch)
+	nodeC := NewNodeWithNodeBuilder(s.digestResolver, s.latestCandidate, s.client, queriedVersion, versionC, []string{channel}, arch)
 
 	// Create conditional edges with SyntheticRisk that applies always
 	conditionalEdges := []ConditionalEdge{
@@ -257,6 +253,32 @@ func (s *Server) generateRisksAlwaysGraph(queriedVersion semver.Version, arch st
 					From: versionA.String(),
 					To:   versionB.String(),
 				},
+			},
+			Risks: []ConditionalUpdateRisk{
+				{
+					URL:     "https://docs.openshift.com/synthetic-risk-a",
+					Name:    "SyntheticRiskA",
+					Message: "This is a synthetic risk A that always applies for testing purposes",
+					MatchingRules: []MatchingRule{
+						{
+							Type: "Always",
+						},
+					},
+				},
+				{
+					URL:     "https://docs.openshift.com/synthetic-risk-b",
+					Name:    "SyntheticRiskB",
+					Message: "This is a synthetic risk B that always applies for testing purposes",
+					MatchingRules: []MatchingRule{
+						{
+							Type: "Always",
+						},
+					},
+				},
+			},
+		},
+		{
+			Edges: []ConditionalUpdate{
 				{
 					From: versionA.String(),
 					To:   versionC.String(),
@@ -264,9 +286,19 @@ func (s *Server) generateRisksAlwaysGraph(queriedVersion semver.Version, arch st
 			},
 			Risks: []ConditionalUpdateRisk{
 				{
-					URL:     "https://docs.openshift.com/synthetic-risk",
-					Name:    "SyntheticRisk",
-					Message: "This is a synthetic risk that always applies for testing purposes",
+					URL:     "https://docs.openshift.com/synthetic-risk-a",
+					Name:    "SyntheticRiskA",
+					Message: "This is a synthetic risk A that always applies for testing purposes",
+					MatchingRules: []MatchingRule{
+						{
+							Type: "Always",
+						},
+					},
+				},
+				{
+					URL:     "https://docs.openshift.com/synthetic-risk-c",
+					Name:    "SyntheticRiskC",
+					Message: "This is a synthetic risk C that always applies for testing purposes",
 					MatchingRules: []MatchingRule{
 						{
 							Type: "Always",

@@ -120,15 +120,15 @@ Complete DAG structure (tree-like):
   [2] 4.19.0
 
 Conditional Edges:
-  <strong>4.18.42</strong> ⇢ 4.18.43 [SyntheticRisk: Always]
-  <strong>4.18.42</strong> ⇢ 4.19.0 [SyntheticRisk: Always]
+  <strong>4.18.42</strong> ⇢ 4.18.43 [SyntheticRiskA: Always, SyntheticRiskB: Always]
+  <strong>4.18.42</strong> ⇢ 4.19.0 [SyntheticRiskA: Always, SyntheticRiskC: Always]
 
 Graph Visualization:
 Complete DAG structure (tree-like):
 
 <strong>4.18.42</strong>
-├⇢ [SyntheticRisk:Always] 4.18.43
-└⇢ [SyntheticRisk:Always] 4.19.0
+├⇢ [SyntheticRiskA:Always,SyntheticRiskB:Always] 4.18.43
+└⇢ [SyntheticRiskA:Always,SyntheticRiskC:Always] 4.19.0
 </div>
         <p><strong>Try it:</strong> <code>curl &#34;https://https://LOCALHOST:PORT/api/upgrades_info/graph?channel=risks-always&amp;version=4.18.42&amp;arch=amd64&#34;</code> 
         <button class="copy-button" onclick="copyToClipboard('curl \u0022https:\/\/https://LOCALHOST:PORT\/api\/upgrades_info\/graph?channel=risks-always\u0026version=4.18.42\u0026arch=amd64\u0022')">Copy</button></p>
