@@ -630,3 +630,33 @@ func TestServer_setupRoutes(t *testing.T) {
 		})
 	}
 }
+
+func TestServer_generateOCP88175Graph(t *testing.T) {
+	tests := []struct {
+		name        string
+		baseVersion semver.Version
+		channel     string
+		arch        string
+		promQL      bool
+	}{
+		{
+			name:        "generates graph with 4.22 cluster bot version and amd64 and always",
+			baseVersion: semver.MustParse("4.22.0-0-2026-03-03-000541-test-ci-ln-1phllqb-latest"),
+			arch:        "amd64",
+		},
+		{
+			name:        "generates graph with 4.22 cluster bot version and amd64 and promql",
+			baseVersion: semver.MustParse("4.22.0-0-2026-03-03-000541-test-ci-ln-1phllqb-latest"),
+			arch:        "amd64",
+			promQL:      true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			server := NewServer()
+			result := server.generateOCP88175Graph(tt.baseVersion, tt.arch, tt.channel, tt.promQL)
+			testhelper.CompareWithFixture(t, result)
+		})
+	}
+}
