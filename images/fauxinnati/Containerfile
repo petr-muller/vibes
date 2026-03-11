@@ -13,6 +13,9 @@ RUN go mod download
 # Copy source code
 COPY . .
 
+# Add dependencies for the build
+RUN apk --no-cache add git
+
 # Build the binary
 RUN ./scripts/build.sh
 
