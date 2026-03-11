@@ -14,7 +14,7 @@ RUN go mod download
 COPY . .
 
 # Build the binary
-RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o fauxinnati ./cmd/fauxinnati
+RUN ./scripts/build.sh
 
 # Runtime stage
 FROM docker.io/library/alpine:latest
