@@ -96,3 +96,6 @@ verify-generate: tidy fmt imports
     git diff --exit-code
 
 verify: verify-generate test
+
+build:
+    scripts/build.sh

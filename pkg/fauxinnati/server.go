@@ -13,6 +13,8 @@ import (
 	"github.com/hashicorp/go-retryablehttp"
 	"github.com/patrickmn/go-cache"
 	"github.com/sirupsen/logrus"
+
+	"github.com/petr-muller/vibes/pkg/version"
 )
 
 type Client interface {
@@ -70,6 +72,7 @@ func (s *Server) setupRoutes() {
 	s.mux.HandleFunc("/api/upgrades_info/graph", s.handleGraph)
 	s.mux.HandleFunc("/healthz", s.handleHealthz)
 	s.mux.HandleFunc("/readyz", s.handleReadyz)
+	s.mux.HandleFunc("/version", s.handleVersion)
 }
 
 func (s *Server) Start(port int) error {
@@ -1364,6 +1367,17 @@ func (s *Server) healthCheck(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/plain")
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("OK"))
+}
+
+func (s *Server) handleVersion(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, http.StatusText(http.StatusMethodNotAllowed), http.StatusMethodNotAllowed)
+		return
+	}
+	if _, err := fmt.Fprintf(w, "%s %s\n", version.Name, version.Version); err != nil {
+		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		return
+	}
 }
 
 type healthResponseRecorder struct {
