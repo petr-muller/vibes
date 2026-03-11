@@ -1,0 +1,134 @@
+nodes:
+    - version:
+        major: 4
+        minor: 22
+        patch: 0
+        pre:
+            - versionstr: 0-2026-03-03-000541-test-ci-ln-1phllqb-latest
+              versionnum: 0
+              isnum: false
+        build: []
+      image: quay.io/openshift-release-dev/ocp-release@sha256:00000000000000000000000000000000000000000000000000000000003d5ef0
+      metadata:
+        io.openshift.upgrades.graph.release.channels: ""
+        io.openshift.upgrades.graph.release.manifestref: sha256:00000000000000000000000000000000000000000000000000000000003d5ef0
+        url: https://access.redhat.com/errata/RHSA-2024:06200
+    - version:
+        major: 4
+        minor: 22
+        patch: 0
+        pre:
+            - versionstr: ec
+              versionnum: 0
+              isnum: false
+            - versionstr: ""
+              versionnum: 0
+              isnum: true
+        build: []
+      image: quay.io/openshift-release-dev/ocp-release@sha256:fa50ad76be25a54235058782d1844a236f64a9a0e9764eedb885ccf1565286c4
+      metadata:
+        io.openshift.upgrades.graph.release.channels: ""
+        io.openshift.upgrades.graph.release.manifestref: sha256:fa50ad76be25a54235058782d1844a236f64a9a0e9764eedb885ccf1565286c4
+        url: https://access.redhat.com/errata/RHSA-2024:06200
+    - version:
+        major: 4
+        minor: 22
+        patch: 0
+        pre:
+            - versionstr: ec
+              versionnum: 0
+              isnum: false
+            - versionstr: ""
+              versionnum: 1
+              isnum: true
+        build: []
+      image: quay.io/openshift-release-dev/ocp-release@sha256:eea721e62d3a06a742adc3d10d9c430af061694d558da9a8d9a17c52a342ddd4
+      metadata:
+        io.openshift.upgrades.graph.release.channels: ""
+        io.openshift.upgrades.graph.release.manifestref: sha256:eea721e62d3a06a742adc3d10d9c430af061694d558da9a8d9a17c52a342ddd4
+        url: https://access.redhat.com/errata/RHSA-2024:06200
+    - version:
+        major: 4
+        minor: 22
+        patch: 0
+        pre:
+            - versionstr: ec
+              versionnum: 0
+              isnum: false
+            - versionstr: ""
+              versionnum: 2
+              isnum: true
+        build: []
+      image: quay.io/openshift-release-dev/ocp-release@sha256:fc88d0bf145c81989a4116bbb0e3d2724d9ab937efb7d217a10e7d7ff3031c50
+      metadata:
+        io.openshift.upgrades.graph.release.channels: ""
+        io.openshift.upgrades.graph.release.manifestref: sha256:fc88d0bf145c81989a4116bbb0e3d2724d9ab937efb7d217a10e7d7ff3031c50
+        url: https://access.redhat.com/errata/RHSA-2024:06200
+    - version:
+        major: 4
+        minor: 22
+        patch: 0
+        pre:
+            - versionstr: ec
+              versionnum: 0
+              isnum: false
+            - versionstr: ""
+              versionnum: 3
+              isnum: true
+        build: []
+      image: quay.io/openshift-release-dev/ocp-release@sha256:58b98da1492b3f4af6129c4684b8e8cde4f2dc197e4b483bb6025971d59f92a5
+      metadata:
+        io.openshift.upgrades.graph.release.channels: ""
+        io.openshift.upgrades.graph.release.manifestref: sha256:58b98da1492b3f4af6129c4684b8e8cde4f2dc197e4b483bb6025971d59f92a5
+        url: https://access.redhat.com/errata/RHSA-2024:06200
+edges:
+    - - 0
+      - 1
+conditionaledges:
+    - edges:
+        - from: 4.22.0-0-2026-03-03-000541-test-ci-ln-1phllqb-latest
+          to: 4.22.0-ec.1
+      risks:
+        - url: https://docs.openshift.com/synthetic-risk-a
+          name: SomeInvokerThing
+          message: This is SomeInvokerThing that always applies for testing purposes
+          matchingrules:
+            - type: PromQL
+              promql:
+                promql: vector(1)
+        - url: https://docs.openshift.com/synthetic-risk-b
+          name: SomeChannelThing
+          message: This is SomeChannelThing that always applies for testing purposes
+          matchingrules:
+            - type: PromQL
+              promql:
+                promql: vector(1)
+    - edges:
+        - from: 4.22.0-0-2026-03-03-000541-test-ci-ln-1phllqb-latest
+          to: 4.22.0-ec.2
+      risks:
+        - url: https://docs.openshift.com/synthetic-risk-a
+          name: SomeInvokerThing
+          message: This is SomeInvokerThing that always applies for testing purposes
+          matchingrules:
+            - type: PromQL
+              promql:
+                promql: vector(1)
+    - edges:
+        - from: 4.22.0-0-2026-03-03-000541-test-ci-ln-1phllqb-latest
+          to: 4.22.0-ec.1
+      risks:
+        - url: https://docs.openshift.com/synthetic-risk-a
+          name: SomeInvokerThing
+          message: This is SomeInvokerThing that always applies for testing purposes
+          matchingrules:
+            - type: PromQL
+              promql:
+                promql: vector(1)
+        - url: https://docs.openshift.com/synthetic-risk-b
+          name: SomeInfrastructureThing
+          message: This is SomeInfrastructureThing that always applies for testing purposes
+          matchingrules:
+            - type: PromQL
+              promql:
+                promql: vector(1)

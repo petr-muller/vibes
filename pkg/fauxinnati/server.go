@@ -22,10 +22,11 @@ type Client interface {
 }
 
 type Server struct {
-	mux             *http.ServeMux
-	digestResolver  DigestResolver
-	latestCandidate func(client Client, major, minor uint64) (semver.Version, error)
-	client          Client
+	mux              *http.ServeMux
+	digestResolver   DigestResolver
+	candidatesGetter *candidatesGetter
+	candidates       func(client Client, major, minor uint64) ([]semver.Version, error)
+	client           Client
 }
 
 type PullSpecResolver interface {
@@ -45,12 +46,12 @@ func NewServer() *Server {
 	client.RetryWaitMin = 1 * time.Second
 	client.RetryWaitMax = 5 * time.Second
 	c := cache.New(5*time.Minute, 10*time.Minute)
-	latestCandidateGetter := latestCandidateGetter{cache: c}
+	candidateGetter := candidatesGetter{cache: c}
 	s := &Server{
-		mux:             http.NewServeMux(),
-		client:          client.StandardClient(),
-		digestResolver:  &prereleaseDigestResolver{cache: c},
-		latestCandidate: latestCandidateGetter.latestCandidate,
+		mux:              http.NewServeMux(),
+		client:           client.StandardClient(),
+		digestResolver:   &prereleaseDigestResolver{cache: c},
+		candidatesGetter: &candidateGetter,
 	}
 	s.setupRoutes()
 	return s
@@ -121,6 +122,10 @@ func (s *Server) handleGraph(w http.ResponseWriter, r *http.Request) {
 		graph = s.generateRisksCannotEvaluateGraph(parsedVersion, arch, channel)
 	case "smoke-test":
 		graph = s.generateSmokeTestGraph(parsedVersion, arch, channel)
+	case "OCP-88175":
+		graph = s.generateOCP88175Graph(parsedVersion, arch, channel, false)
+	case "OCP-88175-PromQL":
+		graph = s.generateOCP88175Graph(parsedVersion, arch, channel, true)
 	default:
 		graph = s.generateEmptyGraph()
 	}
@@ -244,9 +249,9 @@ func (s *Server) generateRisksAlwaysGraph(queriedVersion semver.Version, arch st
 	versionC.Patch = 0
 	versionC.Pre = nil
 
-	nodeA := NewNodeWithNodeBuilder(s.digestResolver, s.latestCandidate, s.client, queriedVersion, versionA, s.getChannelsContainingVersion(versionA), arch)
-	nodeB := NewNodeWithNodeBuilder(s.digestResolver, s.latestCandidate, s.client, queriedVersion, versionB, []string{channel}, arch)
-	nodeC := NewNodeWithNodeBuilder(s.digestResolver, s.latestCandidate, s.client, queriedVersion, versionC, []string{channel}, arch)
+	nodeA := NewNodeWithNodeBuilder(s.digestResolver, s.candidatesGetter.latestCandidate, s.client, queriedVersion, versionA, s.getChannelsContainingVersion(versionA), arch)
+	nodeB := NewNodeWithNodeBuilder(s.digestResolver, s.candidatesGetter.latestCandidate, s.client, queriedVersion, versionB, []string{channel}, arch)
+	nodeC := NewNodeWithNodeBuilder(s.digestResolver, s.candidatesGetter.latestCandidate, s.client, queriedVersion, versionC, []string{channel}, arch)
 
 	// Create conditional edges with SyntheticRisk that applies always
 	conditionalEdges := []ConditionalEdge{
@@ -1395,4 +1400,107 @@ func (h *healthResponseRecorder) Write([]byte) (int, error) {
 
 func (h *healthResponseRecorder) WriteHeader(statusCode int) {
 	h.statusCode = statusCode
+}
+
+func (s *Server) generateOCP88175Graph(queriedVersion semver.Version, arch string, channel string, promQL bool) Graph {
+	versions, err := s.candidatesGetter.candidates(s.client, queriedVersion.Major, queriedVersion.Minor)
+	if err != nil {
+		logrus.WithError(err).Errorf("Failed to get latest candidate")
+		return s.generateEmptyGraph()
+	}
+	if len(versions) < 4 {
+		logrus.WithField("queriedVersion", queriedVersion.String()).Errorf("Failed to get 4 update paths")
+		return s.generateEmptyGraph()
+	}
+	latest4 := versions[len(versions)-4]
+	if latest4.LTE(queriedVersion) {
+		logrus.WithField("latest4", latest4.String()).WithField("queriedVersion", queriedVersion.String()).Errorf("Failed to get 4 update paths")
+		return s.generateEmptyGraph()
+	}
+
+	nodeA := NewNodeWithNodeBuilder(s.digestResolver, s.candidatesGetter.latestCandidate, s.client, queriedVersion, queriedVersion, []string{channel}, arch)
+	nodeB := NewNodeWithNodeBuilder(s.digestResolver, s.candidatesGetter.latestCandidate, s.client, queriedVersion, versions[len(versions)-4], []string{channel}, arch)
+	nodeC := NewNodeWithNodeBuilder(s.digestResolver, s.candidatesGetter.latestCandidate, s.client, queriedVersion, versions[len(versions)-3], []string{channel}, arch)
+	nodeD := NewNodeWithNodeBuilder(s.digestResolver, s.candidatesGetter.latestCandidate, s.client, queriedVersion, versions[len(versions)-2], []string{channel}, arch)
+	nodeE := NewNodeWithNodeBuilder(s.digestResolver, s.candidatesGetter.latestCandidate, s.client, queriedVersion, versions[len(versions)-1], []string{channel}, arch)
+
+	rule := MatchingRule{Type: "Always"}
+	if promQL {
+		rule = MatchingRule{
+			Type: "PromQL",
+			PromQL: &PromQLQuery{
+				PromQL: "vector(1)",
+			},
+		}
+	}
+
+	// Create conditional edges with SyntheticRisk that applies always
+	conditionalEdges := []ConditionalEdge{
+		{
+			Edges: []ConditionalUpdate{
+				{
+					From: nodeA.Version.String(),
+					To:   nodeC.Version.String(),
+				},
+			},
+			Risks: []ConditionalUpdateRisk{
+				{
+					URL:           "https://docs.openshift.com/synthetic-risk-a",
+					Name:          "SomeInvokerThing",
+					Message:       "This is SomeInvokerThing that always applies for testing purposes",
+					MatchingRules: []MatchingRule{rule},
+				},
+				{
+					URL:           "https://docs.openshift.com/synthetic-risk-b",
+					Name:          "SomeChannelThing",
+					Message:       "This is SomeChannelThing that always applies for testing purposes",
+					MatchingRules: []MatchingRule{rule},
+				},
+			},
+		},
+		{
+			Edges: []ConditionalUpdate{
+				{
+					From: nodeA.Version.String(),
+					To:   nodeD.Version.String(),
+				},
+			},
+			Risks: []ConditionalUpdateRisk{
+				{
+					URL:           "https://docs.openshift.com/synthetic-risk-a",
+					Name:          "SomeInvokerThing",
+					Message:       "This is SomeInvokerThing that always applies for testing purposes",
+					MatchingRules: []MatchingRule{rule},
+				},
+			},
+		},
+		{
+			Edges: []ConditionalUpdate{
+				{
+					From: nodeA.Version.String(),
+					To:   nodeC.Version.String(),
+				},
+			},
+			Risks: []ConditionalUpdateRisk{
+				{
+					URL:           "https://docs.openshift.com/synthetic-risk-a",
+					Name:          "SomeInvokerThing",
+					Message:       "This is SomeInvokerThing that always applies for testing purposes",
+					MatchingRules: []MatchingRule{rule},
+				},
+				{
+					URL:           "https://docs.openshift.com/synthetic-risk-b",
+					Name:          "SomeInfrastructureThing",
+					Message:       "This is SomeInfrastructureThing that always applies for testing purposes",
+					MatchingRules: []MatchingRule{rule},
+				},
+			},
+		},
+	}
+
+	return Graph{
+		Nodes:            []Node{nodeA, nodeB, nodeC, nodeD, nodeE},
+		Edges:            []Edge{{0, 1}},
+		ConditionalEdges: conditionalEdges,
+	}
 }

@@ -55,34 +55,40 @@ func (r *prereleaseDigestResolver) getDigest(client Client, tag string) (string,
 	return digest, nil
 }
 
-type latestCandidateGetter struct {
+type candidatesGetter struct {
 	cache Cache
 }
 
-func (g *latestCandidateGetter) latestCandidate(client Client, major, minor uint64) (semver.Version, error) {
-	key := fmt.Sprintf("latestCandidate-%d.%d", major, minor)
+func (g *candidatesGetter) candidates(client Client, major, minor uint64) ([]semver.Version, error) {
+	key := fmt.Sprintf("candidates-%d.%d", major, minor)
 	if data, found := g.cache.Get(key); found {
-		logrus.WithField("key", key).Info("Found latest candidate in cache")
-		return data.(semver.Version), nil
+		logrus.WithField("key", key).Info("Found candidates in cache")
+		return data.([]semver.Version), nil
 	}
-	logrus.WithField("key", key).Debug("Getting latest candidate from github.com ...")
-	var ret semver.Version
-	versions, err := candidates(client, major, minor)
+	logrus.WithField("key", key).Debug("Getting candidates from github.com ...")
+	versions, err := getVersions(client, major, minor)
 	if err != nil {
-		return ret, err
+		return nil, err
 	}
 	if len(versions) == 0 {
-		return ret, fmt.Errorf("no candidates found for version %d", major)
+		return nil, fmt.Errorf("no candidates found for version %d", major)
 	}
 	sort.Slice(versions, func(i, j int) bool {
 		return versions[i].LT(versions[j])
 	})
-	ret = versions[len(versions)-1]
-	g.cache.Set(key, ret, 60*time.Minute)
-	return ret, nil
+	g.cache.Set(key, versions, 60*time.Minute)
+	return versions, nil
 }
 
-func candidates(client Client, major, minor uint64) ([]semver.Version, error) {
+func (g *candidatesGetter) latestCandidate(client Client, major, minor uint64) (semver.Version, error) {
+	versions, err := g.candidates(client, major, minor)
+	if err != nil {
+		return semver.Version{}, err
+	}
+	return versions[len(versions)-1], nil
+}
+
+func getVersions(client Client, major, minor uint64) ([]semver.Version, error) {
 	req, err := http.NewRequest(http.MethodGet, fmt.Sprintf("https://raw.githubusercontent.com/openshift/cincinnati-graph-data/refs/heads/master/channels/candidate-%d.%d.yaml", major, minor), nil)
 	if err != nil {
 		return nil, err
@@ -107,17 +113,17 @@ func candidates(client Client, major, minor uint64) ([]semver.Version, error) {
 	if err := yaml.Unmarshal(data, &candidatesData); err != nil {
 		return nil, fmt.Errorf("failed to unmarshal data (%s): %w", string(data), err)
 	}
-	var candidates []semver.Version
+	var versions []semver.Version
 	var errs []error
 	for _, v := range candidatesData.Versions {
 		version, errP := semver.Parse(v)
 		if errP != nil {
 			errs = append(errs, errP)
 		} else {
-			candidates = append(candidates, version)
+			versions = append(versions, version)
 		}
 	}
-	return candidates, kerrors.NewAggregate(errs)
+	return versions, kerrors.NewAggregate(errs)
 }
 
 type CandidatesData struct {
