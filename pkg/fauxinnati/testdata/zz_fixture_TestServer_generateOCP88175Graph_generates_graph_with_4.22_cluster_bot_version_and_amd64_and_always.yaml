@@ -113,7 +113,7 @@ conditionaledges:
               promql: null
     - edges:
         - from: 4.22.0-0-2026-03-03-000541-test-ci-ln-1phllqb-latest
-          to: 4.22.0-ec.1
+          to: 4.22.0-ec.3
       risks:
         - url: https://docs.openshift.com/synthetic-risk-a
           name: SomeInvokerThing
