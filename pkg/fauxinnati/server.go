@@ -127,7 +127,7 @@ func (s *Server) handleGraph(w http.ResponseWriter, r *http.Request) {
 	case "OCP-88175-PromQL":
 		graph = s.generateOCP88175Graph(parsedVersion, arch, channel, true)
 	default:
-		graph = s.generateEmptyGraph()
+		graph = s.generateEmptyGraph("")
 	}
 
 	w.Header().Set("Content-Type", "application/json")
@@ -794,11 +794,12 @@ func (s *Server) generateSmokeTestGraph(queriedVersion semver.Version, arch stri
 	}
 }
 
-func (s *Server) generateEmptyGraph() Graph {
+func (s *Server) generateEmptyGraph(error string) Graph {
 	return Graph{
 		Nodes:            []Node{},
 		Edges:            []Edge{},
 		ConditionalEdges: []ConditionalEdge{},
+		Error:            error,
 	}
 }
 
@@ -1405,17 +1406,17 @@ func (h *healthResponseRecorder) WriteHeader(statusCode int) {
 func (s *Server) generateOCP88175Graph(queriedVersion semver.Version, arch string, channel string, promQL bool) Graph {
 	versions, err := s.candidatesGetter.candidates(s.client, queriedVersion.Major, queriedVersion.Minor)
 	if err != nil {
-		logrus.WithError(err).Errorf("Failed to get latest candidate")
-		return s.generateEmptyGraph()
+		logrus.WithError(err).Warning("Failed to get candidate")
+		return s.generateEmptyGraph(fmt.Sprintf("failed to get candidates for %s", queriedVersion.String()))
 	}
-	if len(versions) < 4 {
-		logrus.WithField("queriedVersion", queriedVersion.String()).Errorf("Failed to get 4 update paths")
-		return s.generateEmptyGraph()
+	if l := len(versions); l < 4 {
+		logrus.WithField("queriedVersion", queriedVersion.String()).Warning("Failed to get 4 candidates")
+		return s.generateEmptyGraph(fmt.Sprintf("failed to find enough (4) candidates for %s: %d", queriedVersion.String(), l))
 	}
 	latest4 := versions[len(versions)-4]
 	if latest4.LTE(queriedVersion) {
-		logrus.WithField("latest4", latest4.String()).WithField("queriedVersion", queriedVersion.String()).Errorf("Failed to get 4 update paths")
-		return s.generateEmptyGraph()
+		logrus.WithField("latest4", latest4.String()).WithField("queriedVersion", queriedVersion.String()).Warning("Failed to get 4 update paths")
+		return s.generateEmptyGraph(fmt.Sprintf("failed to find enough (4) update paths for %s", queriedVersion.String()))
 	}
 
 	nodeA := NewNodeWithNodeBuilder(s.digestResolver, s.candidatesGetter.latestCandidate, s.client, queriedVersion, queriedVersion, []string{channel}, arch)
