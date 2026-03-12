@@ -10,6 +10,8 @@ type Graph struct {
 	Nodes            []Node            `json:"nodes"`
 	Edges            []Edge            `json:"edges"`
 	ConditionalEdges []ConditionalEdge `json:"conditionalEdges"`
+
+	Error string `json:"error,omitempty" yaml:"error,omitempty"`
 }
 
 type Node struct {
