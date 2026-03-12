@@ -1478,7 +1478,7 @@ func (s *Server) generateOCP88175Graph(queriedVersion semver.Version, arch strin
 			Edges: []ConditionalUpdate{
 				{
 					From: nodeA.Version.String(),
-					To:   nodeC.Version.String(),
+					To:   nodeE.Version.String(),
 				},
 			},
 			Risks: []ConditionalUpdateRisk{
