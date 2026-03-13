@@ -96,13 +96,6 @@ conditionaledges:
             - type: PromQL
               promql:
                 promql: vector(1)
-        - url: https://docs.openshift.com/synthetic-risk-b
-          name: SomeChannelThing
-          message: This is SomeChannelThing that always applies for testing purposes
-          matchingrules:
-            - type: PromQL
-              promql:
-                promql: vector(1)
     - edges:
         - from: 4.22.0-0-2026-03-03-000541-test-ci-ln-1phllqb-latest
           to: 4.22.0-ec.2
@@ -114,17 +107,17 @@ conditionaledges:
             - type: PromQL
               promql:
                 promql: vector(1)
-    - edges:
-        - from: 4.22.0-0-2026-03-03-000541-test-ci-ln-1phllqb-latest
-          to: 4.22.0-ec.3
-      risks:
-        - url: https://docs.openshift.com/synthetic-risk-a
-          name: SomeInvokerThing
-          message: This is SomeInvokerThing that always applies for testing purposes
+        - url: https://docs.openshift.com/synthetic-risk-b
+          name: SomeChannelThing
+          message: This is SomeChannelThing that always applies for testing purposes
           matchingrules:
             - type: PromQL
               promql:
                 promql: vector(1)
+    - edges:
+        - from: 4.22.0-0-2026-03-03-000541-test-ci-ln-1phllqb-latest
+          to: 4.22.0-ec.3
+      risks:
         - url: https://docs.openshift.com/synthetic-risk-b
           name: SomeInfrastructureThing
           message: This is SomeInfrastructureThing that always applies for testing purposes

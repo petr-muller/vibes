@@ -1451,12 +1451,6 @@ func (s *Server) generateOCP88175Graph(queriedVersion semver.Version, arch strin
 					Message:       "This is SomeInvokerThing that always applies for testing purposes",
 					MatchingRules: []MatchingRule{rule},
 				},
-				{
-					URL:           "https://docs.openshift.com/synthetic-risk-b",
-					Name:          "SomeChannelThing",
-					Message:       "This is SomeChannelThing that always applies for testing purposes",
-					MatchingRules: []MatchingRule{rule},
-				},
 			},
 		},
 		{
@@ -1473,6 +1467,12 @@ func (s *Server) generateOCP88175Graph(queriedVersion semver.Version, arch strin
 					Message:       "This is SomeInvokerThing that always applies for testing purposes",
 					MatchingRules: []MatchingRule{rule},
 				},
+				{
+					URL:           "https://docs.openshift.com/synthetic-risk-b",
+					Name:          "SomeChannelThing",
+					Message:       "This is SomeChannelThing that always applies for testing purposes",
+					MatchingRules: []MatchingRule{rule},
+				},
 			},
 		},
 		{
@@ -1483,12 +1483,6 @@ func (s *Server) generateOCP88175Graph(queriedVersion semver.Version, arch strin
 				},
 			},
 			Risks: []ConditionalUpdateRisk{
-				{
-					URL:           "https://docs.openshift.com/synthetic-risk-a",
-					Name:          "SomeInvokerThing",
-					Message:       "This is SomeInvokerThing that always applies for testing purposes",
-					MatchingRules: []MatchingRule{rule},
-				},
 				{
 					URL:           "https://docs.openshift.com/synthetic-risk-b",
 					Name:          "SomeInfrastructureThing",
