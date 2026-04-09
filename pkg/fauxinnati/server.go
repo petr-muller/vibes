@@ -126,6 +126,8 @@ func (s *Server) handleGraph(w http.ResponseWriter, r *http.Request) {
 		graph = s.generateOCP88175Graph(parsedVersion, arch, channel, false)
 	case "OCP-88175-PromQL":
 		graph = s.generateOCP88175Graph(parsedVersion, arch, channel, true)
+	case "OTA-1813":
+		graph = s.generateOTA1813Graph(parsedVersion, arch, channel)
 	default:
 		graph = s.generateEmptyGraph("")
 	}
@@ -1495,6 +1497,59 @@ func (s *Server) generateOCP88175Graph(queriedVersion semver.Version, arch strin
 
 	return Graph{
 		Nodes:            []Node{nodeA, nodeB, nodeC, nodeD, nodeE},
+		Edges:            []Edge{{0, 1}},
+		ConditionalEdges: conditionalEdges,
+	}
+}
+
+func (s *Server) generateOTA1813Graph(queriedVersion semver.Version, arch string, channel string) Graph {
+	versions, err := s.candidatesGetter.candidates(s.client, queriedVersion.Major, queriedVersion.Minor)
+	if err != nil {
+		logrus.WithError(err).Warning("Failed to get candidate")
+		return s.generateEmptyGraph(fmt.Sprintf("failed to get candidates for %s", queriedVersion.String()))
+	}
+	if l := len(versions); l < 2 {
+		logrus.WithField("queriedVersion", queriedVersion.String()).Warning("Failed to get 2 candidates")
+		return s.generateEmptyGraph(fmt.Sprintf("failed to find enough (2) candidates for %s: %d", queriedVersion.String(), l))
+	}
+	latest2 := versions[len(versions)-2]
+	if latest2.LTE(queriedVersion) {
+		logrus.WithField("latest2", latest2.String()).WithField("queriedVersion", queriedVersion.String()).Warning("Failed to get 2 update paths")
+		return s.generateEmptyGraph(fmt.Sprintf("failed to find enough (2) update paths for %s", queriedVersion.String()))
+	}
+
+	nodeA := NewNodeWithNodeBuilder(s.digestResolver, s.candidatesGetter.latestCandidate, s.client, queriedVersion, queriedVersion, []string{channel}, arch)
+	nodeB := NewNodeWithNodeBuilder(s.digestResolver, s.candidatesGetter.latestCandidate, s.client, queriedVersion, versions[len(versions)-2], []string{channel}, arch)
+	nodeC := NewNodeWithNodeBuilder(s.digestResolver, s.candidatesGetter.latestCandidate, s.client, queriedVersion, versions[len(versions)-1], []string{channel}, arch)
+
+	conditionalEdges := []ConditionalEdge{
+		{
+			Edges: []ConditionalUpdate{
+				{
+					From: nodeA.Version.String(),
+					To:   nodeC.Version.String(),
+				},
+			},
+			Risks: []ConditionalUpdateRisk{
+				{
+					URL:     "https://docs.openshift.com/synthetic-risk-a",
+					Name:    "SomeInvokerThing",
+					Message: "This is SomeInvokerThing that always applies for testing purposes",
+					MatchingRules: []MatchingRule{
+						{
+							Type: "PromQL",
+							PromQL: &PromQLQuery{
+								PromQL: "cluster_installer",
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	return Graph{
+		Nodes:            []Node{nodeA, nodeB, nodeC},
 		Edges:            []Edge{{0, 1}},
 		ConditionalEdges: conditionalEdges,
 	}
