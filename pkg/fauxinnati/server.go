@@ -82,6 +82,10 @@ func (s *Server) Start(port int) error {
 	return http.ListenAndServe(addr, WithLogging(s.mux))
 }
 
+const (
+	riskNamePrefix = "TestAlertFeatureE2ETest"
+)
+
 func (s *Server) handleGraph(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -267,7 +271,7 @@ func (s *Server) generateRisksAlwaysGraph(queriedVersion semver.Version, arch st
 			Risks: []ConditionalUpdateRisk{
 				{
 					URL:     "https://docs.openshift.com/synthetic-risk-a",
-					Name:    "SyntheticRiskA",
+					Name:    riskNamePrefix + "SyntheticRiskA",
 					Message: "This is a synthetic risk A that always applies for testing purposes",
 					MatchingRules: []MatchingRule{
 						{
@@ -277,7 +281,7 @@ func (s *Server) generateRisksAlwaysGraph(queriedVersion semver.Version, arch st
 				},
 				{
 					URL:     "https://docs.openshift.com/synthetic-risk-b",
-					Name:    "SyntheticRiskB",
+					Name:    riskNamePrefix + "SyntheticRiskB",
 					Message: "This is a synthetic risk B that always applies for testing purposes",
 					MatchingRules: []MatchingRule{
 						{
@@ -297,7 +301,7 @@ func (s *Server) generateRisksAlwaysGraph(queriedVersion semver.Version, arch st
 			Risks: []ConditionalUpdateRisk{
 				{
 					URL:     "https://docs.openshift.com/synthetic-risk-a",
-					Name:    "SyntheticRiskA",
+					Name:    riskNamePrefix + "SyntheticRiskA",
 					Message: "This is a synthetic risk A that always applies for testing purposes",
 					MatchingRules: []MatchingRule{
 						{
@@ -307,7 +311,7 @@ func (s *Server) generateRisksAlwaysGraph(queriedVersion semver.Version, arch st
 				},
 				{
 					URL:     "https://docs.openshift.com/synthetic-risk-c",
-					Name:    "SyntheticRiskC",
+					Name:    riskNamePrefix + "SyntheticRiskC",
 					Message: "This is a synthetic risk C that always applies for testing purposes",
 					MatchingRules: []MatchingRule{
 						{
@@ -372,7 +376,7 @@ func (s *Server) generateRisksMatchingGraph(queriedVersion semver.Version, arch 
 			Risks: []ConditionalUpdateRisk{
 				{
 					URL:     "https://docs.openshift.com/synthetic-risk-promql",
-					Name:    "SyntheticRisk",
+					Name:    riskNamePrefix + "SyntheticRisk",
 					Message: "This is a synthetic risk with PromQL that always matches in OpenShift clusters",
 					MatchingRules: []MatchingRule{
 						{
@@ -433,7 +437,7 @@ func (s *Server) generateRisksCannotEvaluateGraph(queriedVersion semver.Version,
 			Risks: []ConditionalUpdateRisk{
 				{
 					URL:     "https://docs.openshift.com/synthetic-risk-promql",
-					Name:    "SyntheticRisk",
+					Name:    riskNamePrefix + "SyntheticRisk",
 					Message: "This is a synthetic risk with PromQL that cannot be evaluated in OpenShift clusters",
 					MatchingRules: []MatchingRule{
 						{
@@ -494,7 +498,7 @@ func (s *Server) generateRisksNonmatchingGraph(queriedVersion semver.Version, ar
 			Risks: []ConditionalUpdateRisk{
 				{
 					URL:     "https://docs.openshift.com/synthetic-risk-promql-nonmatching",
-					Name:    "SyntheticRisk",
+					Name:    riskNamePrefix + "SyntheticRisk",
 					Message: "This is a synthetic risk with PromQL that never matches in OpenShift clusters",
 					MatchingRules: []MatchingRule{
 						{
@@ -660,7 +664,7 @@ func (s *Server) generateSmokeTestGraph(queriedVersion semver.Version, arch stri
 			Risks: []ConditionalUpdateRisk{
 				{
 					URL:     "https://docs.openshift.com/synthetic-risk-smoke",
-					Name:    "RiskA",
+					Name:    riskNamePrefix + "RiskA",
 					Message: "This is a synthetic risk with Always type for smoke testing",
 					MatchingRules: []MatchingRule{
 						{
@@ -684,7 +688,7 @@ func (s *Server) generateSmokeTestGraph(queriedVersion semver.Version, arch stri
 			Risks: []ConditionalUpdateRisk{
 				{
 					URL:     "https://docs.openshift.com/synthetic-risk-smoke-promql",
-					Name:    "RiskBMatches",
+					Name:    riskNamePrefix + "RiskBMatches",
 					Message: "This is a synthetic risk with PromQL that matches for smoke testing",
 					MatchingRules: []MatchingRule{
 						{
@@ -711,7 +715,7 @@ func (s *Server) generateSmokeTestGraph(queriedVersion semver.Version, arch stri
 			Risks: []ConditionalUpdateRisk{
 				{
 					URL:     "https://docs.openshift.com/synthetic-risk-smoke-promql-nomatch",
-					Name:    "RiskCNoMatch",
+					Name:    riskNamePrefix + "RiskCNoMatch",
 					Message: "This is a synthetic risk with PromQL that never matches for smoke testing",
 					MatchingRules: []MatchingRule{
 						{
@@ -738,7 +742,7 @@ func (s *Server) generateSmokeTestGraph(queriedVersion semver.Version, arch stri
 			Risks: []ConditionalUpdateRisk{
 				{
 					URL:     "https://docs.openshift.com/synthetic-risk-smoke-combined-a",
-					Name:    "RiskA",
+					Name:    riskNamePrefix + "RiskA",
 					Message: "This is RiskA part of combined risks for smoke testing",
 					MatchingRules: []MatchingRule{
 						{
@@ -748,7 +752,7 @@ func (s *Server) generateSmokeTestGraph(queriedVersion semver.Version, arch stri
 				},
 				{
 					URL:     "https://docs.openshift.com/synthetic-risk-smoke-combined-b",
-					Name:    "RiskBMatches",
+					Name:    riskNamePrefix + "RiskBMatches",
 					Message: "This is RiskBMatches part of combined risks for smoke testing",
 					MatchingRules: []MatchingRule{
 						{
@@ -761,7 +765,7 @@ func (s *Server) generateSmokeTestGraph(queriedVersion semver.Version, arch stri
 				},
 				{
 					URL:     "https://docs.openshift.com/synthetic-risk-smoke-combined-c",
-					Name:    "RiskCNoMatch",
+					Name:    riskNamePrefix + "RiskCNoMatch",
 					Message: "This is RiskCNoMatch part of combined risks for smoke testing",
 					MatchingRules: []MatchingRule{
 						{
@@ -774,7 +778,7 @@ func (s *Server) generateSmokeTestGraph(queriedVersion semver.Version, arch stri
 				},
 				{
 					URL:     "https://docs.openshift.com/synthetic-risk-smoke-combined-d",
-					Name:    "RiskDCannotEvaluate",
+					Name:    riskNamePrefix + "RiskDCannotEvaluate",
 					Message: "This is RiskDCannotEvaluate part of combined risks for smoke testing",
 					MatchingRules: []MatchingRule{
 						{
@@ -1449,7 +1453,7 @@ func (s *Server) generateOCP88175Graph(queriedVersion semver.Version, arch strin
 			Risks: []ConditionalUpdateRisk{
 				{
 					URL:           "https://docs.openshift.com/synthetic-risk-a",
-					Name:          "SomeInvokerThing",
+					Name:          riskNamePrefix + "SomeInvokerThing",
 					Message:       "This is SomeInvokerThing that always applies for testing purposes",
 					MatchingRules: []MatchingRule{rule},
 				},
@@ -1465,13 +1469,13 @@ func (s *Server) generateOCP88175Graph(queriedVersion semver.Version, arch strin
 			Risks: []ConditionalUpdateRisk{
 				{
 					URL:           "https://docs.openshift.com/synthetic-risk-a",
-					Name:          "SomeInvokerThing",
+					Name:          riskNamePrefix + "SomeInvokerThing",
 					Message:       "This is SomeInvokerThing that always applies for testing purposes",
 					MatchingRules: []MatchingRule{rule},
 				},
 				{
 					URL:           "https://docs.openshift.com/synthetic-risk-b",
-					Name:          "SomeChannelThing",
+					Name:          riskNamePrefix + "SomeChannelThing",
 					Message:       "This is SomeChannelThing that always applies for testing purposes",
 					MatchingRules: []MatchingRule{rule},
 				},
@@ -1487,7 +1491,7 @@ func (s *Server) generateOCP88175Graph(queriedVersion semver.Version, arch strin
 			Risks: []ConditionalUpdateRisk{
 				{
 					URL:           "https://docs.openshift.com/synthetic-risk-b",
-					Name:          "SomeInfrastructureThing",
+					Name:          riskNamePrefix + "SomeInfrastructureThing",
 					Message:       "This is SomeInfrastructureThing that always applies for testing purposes",
 					MatchingRules: []MatchingRule{rule},
 				},
@@ -1533,7 +1537,7 @@ func (s *Server) generateOTA1813Graph(queriedVersion semver.Version, arch string
 			Risks: []ConditionalUpdateRisk{
 				{
 					URL:     "https://docs.openshift.com/synthetic-risk-a",
-					Name:    "SomeInvokerThing",
+					Name:    riskNamePrefix + "SomeInvokerThing",
 					Message: "This is SomeInvokerThing that always applies for testing purposes",
 					MatchingRules: []MatchingRule{
 						{

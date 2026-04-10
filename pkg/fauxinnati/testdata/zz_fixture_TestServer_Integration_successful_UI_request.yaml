@@ -120,15 +120,15 @@ Complete DAG structure (tree-like):
   [2] 4.19.0
 
 Conditional Edges:
-  <strong>4.18.42</strong> ⇢ 4.18.43 [SyntheticRiskA: Always, SyntheticRiskB: Always]
-  <strong>4.18.42</strong> ⇢ 4.19.0 [SyntheticRiskA: Always, SyntheticRiskC: Always]
+  <strong>4.18.42</strong> ⇢ 4.18.43 [TestAlertFeatureE2ETestSyntheticRiskA: Always, TestAlertFeatureE2ETestSyntheticRiskB: Always]
+  <strong>4.18.42</strong> ⇢ 4.19.0 [TestAlertFeatureE2ETestSyntheticRiskA: Always, TestAlertFeatureE2ETestSyntheticRiskC: Always]
 
 Graph Visualization:
 Complete DAG structure (tree-like):
 
 <strong>4.18.42</strong>
-├⇢ [SyntheticRiskA:Always,SyntheticRiskB:Always] 4.18.43
-└⇢ [SyntheticRiskA:Always,SyntheticRiskC:Always] 4.19.0
+├⇢ [TestAlertFeatureE2ETestSyntheticRiskA:Always,TestAlertFeatureE2ETestSyntheticRiskB:Always] 4.18.43
+└⇢ [TestAlertFeatureE2ETestSyntheticRiskA:Always,TestAlertFeatureE2ETestSyntheticRiskC:Always] 4.19.0
 </div>
         <p><strong>Try it:</strong> <code>curl &#34;https://https://LOCALHOST:PORT/api/upgrades_info/graph?channel=risks-always&amp;version=4.18.42&amp;arch=amd64&#34;</code> 
         <button class="copy-button" onclick="copyToClipboard('curl \u0022https:\/\/https://LOCALHOST:PORT\/api\/upgrades_info\/graph?channel=risks-always\u0026version=4.18.42\u0026arch=amd64\u0022')">Copy</button></p>
@@ -143,15 +143,15 @@ Complete DAG structure (tree-like):
   [2] 4.19.0
 
 Conditional Edges:
-  <strong>4.18.42</strong> ⇢ 4.18.43 [SyntheticRisk: PromQL]
-  <strong>4.18.42</strong> ⇢ 4.19.0 [SyntheticRisk: PromQL]
+  <strong>4.18.42</strong> ⇢ 4.18.43 [TestAlertFeatureE2ETestSyntheticRisk: PromQL]
+  <strong>4.18.42</strong> ⇢ 4.19.0 [TestAlertFeatureE2ETestSyntheticRisk: PromQL]
 
 Graph Visualization:
 Complete DAG structure (tree-like):
 
 <strong>4.18.42</strong>
-├⇢ [SyntheticRisk:PromQL] 4.18.43
-└⇢ [SyntheticRisk:PromQL] 4.19.0
+├⇢ [TestAlertFeatureE2ETestSyntheticRisk:PromQL] 4.18.43
+└⇢ [TestAlertFeatureE2ETestSyntheticRisk:PromQL] 4.19.0
 </div>
         <p><strong>Try it:</strong> <code>curl &#34;https://https://LOCALHOST:PORT/api/upgrades_info/graph?channel=risks-matching&amp;version=4.18.42&amp;arch=amd64&#34;</code> 
         <button class="copy-button" onclick="copyToClipboard('curl \u0022https:\/\/https://LOCALHOST:PORT\/api\/upgrades_info\/graph?channel=risks-matching\u0026version=4.18.42\u0026arch=amd64\u0022')">Copy</button></p>
@@ -166,15 +166,15 @@ Complete DAG structure (tree-like):
   [2] 4.19.0
 
 Conditional Edges:
-  <strong>4.18.42</strong> ⇢ 4.18.43 [SyntheticRisk: PromQL]
-  <strong>4.18.42</strong> ⇢ 4.19.0 [SyntheticRisk: PromQL]
+  <strong>4.18.42</strong> ⇢ 4.18.43 [TestAlertFeatureE2ETestSyntheticRisk: PromQL]
+  <strong>4.18.42</strong> ⇢ 4.19.0 [TestAlertFeatureE2ETestSyntheticRisk: PromQL]
 
 Graph Visualization:
 Complete DAG structure (tree-like):
 
 <strong>4.18.42</strong>
-├⇢ [SyntheticRisk:PromQL] 4.18.43
-└⇢ [SyntheticRisk:PromQL] 4.19.0
+├⇢ [TestAlertFeatureE2ETestSyntheticRisk:PromQL] 4.18.43
+└⇢ [TestAlertFeatureE2ETestSyntheticRisk:PromQL] 4.19.0
 </div>
         <p><strong>Try it:</strong> <code>curl &#34;https://https://LOCALHOST:PORT/api/upgrades_info/graph?channel=risks-nonmatching&amp;version=4.18.42&amp;arch=amd64&#34;</code> 
         <button class="copy-button" onclick="copyToClipboard('curl \u0022https:\/\/https://LOCALHOST:PORT\/api\/upgrades_info\/graph?channel=risks-nonmatching\u0026version=4.18.42\u0026arch=amd64\u0022')">Copy</button></p>
@@ -213,14 +213,14 @@ Unconditional Edges:
   <strong>4.18.42</strong> → 4.19.0
 
 Conditional Edges:
-  <strong>4.18.42</strong> ⇢ 4.18.7 [RiskA: Always]
-  <strong>4.18.42</strong> ⇢ 4.19.1 [RiskA: Always]
-  <strong>4.18.42</strong> ⇢ 4.18.8 [RiskBMatches: PromQL]
-  <strong>4.18.42</strong> ⇢ 4.19.2 [RiskBMatches: PromQL]
-  <strong>4.18.42</strong> ⇢ 4.18.9 [RiskCNoMatch: PromQL]
-  <strong>4.18.42</strong> ⇢ 4.19.3 [RiskCNoMatch: PromQL]
-  <strong>4.18.42</strong> ⇢ 4.18.10 [RiskA: Always, RiskBMatches: PromQL, RiskCNoMatch: PromQL, RiskDCannotEvaluate: PromQL]
-  <strong>4.18.42</strong> ⇢ 4.19.4 [RiskA: Always, RiskBMatches: PromQL, RiskCNoMatch: PromQL, RiskDCannotEvaluate: PromQL]
+  <strong>4.18.42</strong> ⇢ 4.18.7 [TestAlertFeatureE2ETestRiskA: Always]
+  <strong>4.18.42</strong> ⇢ 4.19.1 [TestAlertFeatureE2ETestRiskA: Always]
+  <strong>4.18.42</strong> ⇢ 4.18.8 [TestAlertFeatureE2ETestRiskBMatches: PromQL]
+  <strong>4.18.42</strong> ⇢ 4.19.2 [TestAlertFeatureE2ETestRiskBMatches: PromQL]
+  <strong>4.18.42</strong> ⇢ 4.18.9 [TestAlertFeatureE2ETestRiskCNoMatch: PromQL]
+  <strong>4.18.42</strong> ⇢ 4.19.3 [TestAlertFeatureE2ETestRiskCNoMatch: PromQL]
+  <strong>4.18.42</strong> ⇢ 4.18.10 [TestAlertFeatureE2ETestRiskA: Always, TestAlertFeatureE2ETestRiskBMatches: PromQL, TestAlertFeatureE2ETestRiskCNoMatch: PromQL, TestAlertFeatureE2ETestRiskDCannotEvaluate: PromQL]
+  <strong>4.18.42</strong> ⇢ 4.19.4 [TestAlertFeatureE2ETestRiskA: Always, TestAlertFeatureE2ETestRiskBMatches: PromQL, TestAlertFeatureE2ETestRiskCNoMatch: PromQL, TestAlertFeatureE2ETestRiskDCannotEvaluate: PromQL]
 
 Graph Visualization:
 Complete DAG structure (tree-like):
@@ -229,14 +229,14 @@ Complete DAG structure (tree-like):
 ├── <strong>4.18.42</strong>
 │   ├── 4.18.43
 │   ├── 4.19.0
-│   ├⇢ [RiskA:Always] 4.18.7
-│   ├⇢ [RiskA:Always] 4.19.1
-│   ├⇢ [RiskBMatches:PromQL] 4.18.8
-│   ├⇢ [RiskBMatches:PromQL] 4.19.2
-│   ├⇢ [RiskCNoMatch:PromQL] 4.18.9
-│   ├⇢ [RiskCNoMatch:PromQL] 4.19.3
-│   ├⇢ [RiskA:Always,RiskBMatches:PromQL,RiskCNoMatch:PromQL,RiskDCannotEvaluate:PromQL] 4.18.10
-│   └⇢ [RiskA:Always,RiskBMatches:PromQL,RiskCNoMatch:PromQL,RiskDCannotEvaluate:PromQL] 4.19.4
+│   ├⇢ [TestAlertFeatureE2ETestRiskA:Always] 4.18.7
+│   ├⇢ [TestAlertFeatureE2ETestRiskA:Always] 4.19.1
+│   ├⇢ [TestAlertFeatureE2ETestRiskBMatches:PromQL] 4.18.8
+│   ├⇢ [TestAlertFeatureE2ETestRiskBMatches:PromQL] 4.19.2
+│   ├⇢ [TestAlertFeatureE2ETestRiskCNoMatch:PromQL] 4.18.9
+│   ├⇢ [TestAlertFeatureE2ETestRiskCNoMatch:PromQL] 4.19.3
+│   ├⇢ [TestAlertFeatureE2ETestRiskA:Always,TestAlertFeatureE2ETestRiskBMatches:PromQL,TestAlertFeatureE2ETestRiskCNoMatch:PromQL,TestAlertFeatureE2ETestRiskDCannotEvaluate:PromQL] 4.18.10
+│   └⇢ [TestAlertFeatureE2ETestRiskA:Always,TestAlertFeatureE2ETestRiskBMatches:PromQL,TestAlertFeatureE2ETestRiskCNoMatch:PromQL,TestAlertFeatureE2ETestRiskDCannotEvaluate:PromQL] 4.19.4
 └── 4.17.1
 </div>
         <p><strong>Try it:</strong> <code>curl &#34;https://https://LOCALHOST:PORT/api/upgrades_info/graph?channel=smoke-test&amp;version=4.18.42&amp;arch=amd64&#34;</code> 

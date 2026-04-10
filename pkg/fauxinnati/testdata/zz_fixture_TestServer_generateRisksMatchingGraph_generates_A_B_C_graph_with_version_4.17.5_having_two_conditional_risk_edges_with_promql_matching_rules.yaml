@@ -41,7 +41,7 @@ conditionaledges:
           to: 4.18.0
       risks:
         - url: https://docs.openshift.com/synthetic-risk-promql
-          name: SyntheticRisk
+          name: TestAlertFeatureE2ETestSyntheticRisk
           message: This is a synthetic risk with PromQL that always matches in OpenShift clusters
           matchingrules:
             - type: PromQL
