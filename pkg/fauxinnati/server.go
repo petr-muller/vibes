@@ -1534,12 +1534,12 @@ func (s *Server) generateOTA1813Graph(queriedVersion semver.Version, arch string
 				{
 					URL:     "https://docs.openshift.com/synthetic-risk-a",
 					Name:    "SomeInvokerThing",
-					Message: "This is SomeInvokerThing that always applies for testing purposes",
+					Message: "This is SomeInvokerThing that cannot be evaluated for testing purposes",
 					MatchingRules: []MatchingRule{
 						{
 							Type: "PromQL",
 							PromQL: &PromQLQuery{
-								PromQL: "cluster_installer",
+								PromQL: "this will fail; muahaha",
 							},
 						},
 					},
