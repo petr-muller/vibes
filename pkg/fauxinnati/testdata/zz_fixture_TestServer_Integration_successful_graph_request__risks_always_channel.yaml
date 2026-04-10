@@ -40,7 +40,7 @@
       "risks": [
         {
           "url": "https://docs.openshift.com/synthetic-risk-a",
-          "name": "SyntheticRiskA",
+          "name": "TestAlertFeatureE2ETestSyntheticRiskA",
           "message": "This is a synthetic risk A that always applies for testing purposes",
           "matchingRules": [
             {
@@ -50,7 +50,7 @@
         },
         {
           "url": "https://docs.openshift.com/synthetic-risk-b",
-          "name": "SyntheticRiskB",
+          "name": "TestAlertFeatureE2ETestSyntheticRiskB",
           "message": "This is a synthetic risk B that always applies for testing purposes",
           "matchingRules": [
             {
@@ -70,7 +70,7 @@
       "risks": [
         {
           "url": "https://docs.openshift.com/synthetic-risk-a",
-          "name": "SyntheticRiskA",
+          "name": "TestAlertFeatureE2ETestSyntheticRiskA",
           "message": "This is a synthetic risk A that always applies for testing purposes",
           "matchingRules": [
             {
@@ -80,7 +80,7 @@
         },
         {
           "url": "https://docs.openshift.com/synthetic-risk-c",
-          "name": "SyntheticRiskC",
+          "name": "TestAlertFeatureE2ETestSyntheticRiskC",
           "message": "This is a synthetic risk C that always applies for testing purposes",
           "matchingRules": [
             {

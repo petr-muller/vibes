@@ -151,7 +151,7 @@
       "risks": [
         {
           "url": "https://docs.openshift.com/synthetic-risk-smoke",
-          "name": "RiskA",
+          "name": "TestAlertFeatureE2ETestRiskA",
           "message": "This is a synthetic risk with Always type for smoke testing",
           "matchingRules": [
             {
@@ -175,7 +175,7 @@
       "risks": [
         {
           "url": "https://docs.openshift.com/synthetic-risk-smoke-promql",
-          "name": "RiskBMatches",
+          "name": "TestAlertFeatureE2ETestRiskBMatches",
           "message": "This is a synthetic risk with PromQL that matches for smoke testing",
           "matchingRules": [
             {
@@ -202,7 +202,7 @@
       "risks": [
         {
           "url": "https://docs.openshift.com/synthetic-risk-smoke-promql-nomatch",
-          "name": "RiskCNoMatch",
+          "name": "TestAlertFeatureE2ETestRiskCNoMatch",
           "message": "This is a synthetic risk with PromQL that never matches for smoke testing",
           "matchingRules": [
             {
@@ -229,7 +229,7 @@
       "risks": [
         {
           "url": "https://docs.openshift.com/synthetic-risk-smoke-combined-a",
-          "name": "RiskA",
+          "name": "TestAlertFeatureE2ETestRiskA",
           "message": "This is RiskA part of combined risks for smoke testing",
           "matchingRules": [
             {
@@ -239,7 +239,7 @@
         },
         {
           "url": "https://docs.openshift.com/synthetic-risk-smoke-combined-b",
-          "name": "RiskBMatches",
+          "name": "TestAlertFeatureE2ETestRiskBMatches",
           "message": "This is RiskBMatches part of combined risks for smoke testing",
           "matchingRules": [
             {
@@ -252,7 +252,7 @@
         },
         {
           "url": "https://docs.openshift.com/synthetic-risk-smoke-combined-c",
-          "name": "RiskCNoMatch",
+          "name": "TestAlertFeatureE2ETestRiskCNoMatch",
           "message": "This is RiskCNoMatch part of combined risks for smoke testing",
           "matchingRules": [
             {
@@ -265,7 +265,7 @@
         },
         {
           "url": "https://docs.openshift.com/synthetic-risk-smoke-combined-d",
-          "name": "RiskDCannotEvaluate",
+          "name": "TestAlertFeatureE2ETestRiskDCannotEvaluate",
           "message": "This is RiskDCannotEvaluate part of combined risks for smoke testing",
           "matchingRules": [
             {

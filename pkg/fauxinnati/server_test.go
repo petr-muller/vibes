@@ -253,7 +253,7 @@ func TestServer_handleGraph(t *testing.T) {
 				if len(graph.ConditionalEdges) != 2 {
 					t.Errorf("expected 2 conditional edge in the graph, got %d", len(graph.ConditionalEdges))
 				}
-				if diff := cmp.Diff([]string{"4.17.6(SyntheticRiskA:Always|SyntheticRiskB:Always)", "4.18.0(SyntheticRiskA:Always|SyntheticRiskC:Always)"}, conditionalEdgesFrom(graph, "4.17.5")); diff != "" {
+				if diff := cmp.Diff([]string{"4.17.6(TestAlertFeatureE2ETestSyntheticRiskA:Always|TestAlertFeatureE2ETestSyntheticRiskB:Always)", "4.18.0(TestAlertFeatureE2ETestSyntheticRiskA:Always|TestAlertFeatureE2ETestSyntheticRiskC:Always)"}, conditionalEdgesFrom(graph, "4.17.5")); diff != "" {
 					t.Errorf("conditional edges from 4.17.5 mismatch (-want +got):\n%s", diff)
 				}
 			},
@@ -277,7 +277,7 @@ func TestServer_handleGraph(t *testing.T) {
 				if len(graph.ConditionalEdges) != 1 {
 					t.Errorf("expected 1 conditional edge in the graph, got %d", len(graph.ConditionalEdges))
 				}
-				if diff := cmp.Diff([]string{"4.17.6(SyntheticRisk:PromQL)", "4.18.0(SyntheticRisk:PromQL)"}, conditionalEdgesFrom(graph, "4.17.5")); diff != "" {
+				if diff := cmp.Diff([]string{"4.17.6(TestAlertFeatureE2ETestSyntheticRisk:PromQL)", "4.18.0(TestAlertFeatureE2ETestSyntheticRisk:PromQL)"}, conditionalEdgesFrom(graph, "4.17.5")); diff != "" {
 					t.Errorf("conditional edges from 4.17.5 mismatch (-want +got):\n%s", diff)
 				}
 			},
@@ -301,7 +301,7 @@ func TestServer_handleGraph(t *testing.T) {
 				if len(graph.ConditionalEdges) != 1 {
 					t.Errorf("expected 1 conditional edge in the graph, got %d", len(graph.ConditionalEdges))
 				}
-				if diff := cmp.Diff([]string{"4.17.6(SyntheticRisk:PromQL)", "4.18.0(SyntheticRisk:PromQL)"}, conditionalEdgesFrom(graph, "4.17.5")); diff != "" {
+				if diff := cmp.Diff([]string{"4.17.6(TestAlertFeatureE2ETestSyntheticRisk:PromQL)", "4.18.0(TestAlertFeatureE2ETestSyntheticRisk:PromQL)"}, conditionalEdgesFrom(graph, "4.17.5")); diff != "" {
 					t.Errorf("conditional edges from 4.17.5 mismatch (-want +got):\n%s", diff)
 				}
 			},
@@ -335,14 +335,14 @@ func TestServer_handleGraph(t *testing.T) {
 					t.Errorf("edges from 4.17.5 mismatch (-want +got):\n%s", diff)
 				}
 				conditionals := []string{
-					"4.17.7(RiskA:Always)",
-					"4.17.8(RiskBMatches:PromQL)",
-					"4.17.9(RiskCNoMatch:PromQL)",
-					"4.17.10(RiskA:Always|RiskBMatches:PromQL|RiskCNoMatch:PromQL|RiskDCannotEvaluate:PromQL)",
-					"4.18.1(RiskA:Always)",
-					"4.18.2(RiskBMatches:PromQL)",
-					"4.18.3(RiskCNoMatch:PromQL)",
-					"4.18.4(RiskA:Always|RiskBMatches:PromQL|RiskCNoMatch:PromQL|RiskDCannotEvaluate:PromQL)",
+					"4.17.7(TestAlertFeatureE2ETestRiskA:Always)",
+					"4.17.8(TestAlertFeatureE2ETestRiskBMatches:PromQL)",
+					"4.17.9(TestAlertFeatureE2ETestRiskCNoMatch:PromQL)",
+					"4.17.10(TestAlertFeatureE2ETestRiskA:Always|TestAlertFeatureE2ETestRiskBMatches:PromQL|TestAlertFeatureE2ETestRiskCNoMatch:PromQL|TestAlertFeatureE2ETestRiskDCannotEvaluate:PromQL)",
+					"4.18.1(TestAlertFeatureE2ETestRiskA:Always)",
+					"4.18.2(TestAlertFeatureE2ETestRiskBMatches:PromQL)",
+					"4.18.3(TestAlertFeatureE2ETestRiskCNoMatch:PromQL)",
+					"4.18.4(TestAlertFeatureE2ETestRiskA:Always|TestAlertFeatureE2ETestRiskBMatches:PromQL|TestAlertFeatureE2ETestRiskCNoMatch:PromQL|TestAlertFeatureE2ETestRiskDCannotEvaluate:PromQL)",
 				}
 				// the test sorts the output to make the test deterministic, but it is not smart to handle semvers
 				sort.Strings(conditionals)
@@ -632,6 +632,7 @@ func TestServer_setupRoutes(t *testing.T) {
 }
 
 func TestServer_generateOCP88175Graph(t *testing.T) {
+	t.Skip("The versions are moving and the output will be stale over time")
 	tests := []struct {
 		name        string
 		baseVersion semver.Version

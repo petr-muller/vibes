@@ -159,7 +159,7 @@ conditionaledges:
           to: 4.18.1
       risks:
         - url: https://docs.openshift.com/synthetic-risk-smoke
-          name: RiskA
+          name: TestAlertFeatureE2ETestRiskA
           message: This is a synthetic risk with Always type for smoke testing
           matchingrules:
             - type: Always
@@ -171,7 +171,7 @@ conditionaledges:
           to: 4.18.2
       risks:
         - url: https://docs.openshift.com/synthetic-risk-smoke-promql
-          name: RiskBMatches
+          name: TestAlertFeatureE2ETestRiskBMatches
           message: This is a synthetic risk with PromQL that matches for smoke testing
           matchingrules:
             - type: PromQL
@@ -184,7 +184,7 @@ conditionaledges:
           to: 4.18.3
       risks:
         - url: https://docs.openshift.com/synthetic-risk-smoke-promql-nomatch
-          name: RiskCNoMatch
+          name: TestAlertFeatureE2ETestRiskCNoMatch
           message: This is a synthetic risk with PromQL that never matches for smoke testing
           matchingrules:
             - type: PromQL
@@ -197,27 +197,27 @@ conditionaledges:
           to: 4.18.4
       risks:
         - url: https://docs.openshift.com/synthetic-risk-smoke-combined-a
-          name: RiskA
+          name: TestAlertFeatureE2ETestRiskA
           message: This is RiskA part of combined risks for smoke testing
           matchingrules:
             - type: Always
               promql: null
         - url: https://docs.openshift.com/synthetic-risk-smoke-combined-b
-          name: RiskBMatches
+          name: TestAlertFeatureE2ETestRiskBMatches
           message: This is RiskBMatches part of combined risks for smoke testing
           matchingrules:
             - type: PromQL
               promql:
                 promql: vector(1)
         - url: https://docs.openshift.com/synthetic-risk-smoke-combined-c
-          name: RiskCNoMatch
+          name: TestAlertFeatureE2ETestRiskCNoMatch
           message: This is RiskCNoMatch part of combined risks for smoke testing
           matchingrules:
             - type: PromQL
               promql:
                 promql: vector(0)
         - url: https://docs.openshift.com/synthetic-risk-smoke-combined-d
-          name: RiskDCannotEvaluate
+          name: TestAlertFeatureE2ETestRiskDCannotEvaluate
           message: This is RiskDCannotEvaluate part of combined risks for smoke testing
           matchingrules:
             - type: PromQL
