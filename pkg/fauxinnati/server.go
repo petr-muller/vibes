@@ -1503,24 +1503,20 @@ func (s *Server) generateOCP88175Graph(queriedVersion semver.Version, arch strin
 }
 
 func (s *Server) generateOTA1813Graph(queriedVersion semver.Version, arch string, channel string) Graph {
-	versions, err := s.candidatesGetter.candidates(s.client, queriedVersion.Major, queriedVersion.Minor)
-	if err != nil {
-		logrus.WithError(err).Warning("Failed to get candidate")
-		return s.generateEmptyGraph(fmt.Sprintf("failed to get candidates for %s", queriedVersion.String()))
-	}
-	if l := len(versions); l < 2 {
-		logrus.WithField("queriedVersion", queriedVersion.String()).Warning("Failed to get 2 candidates")
-		return s.generateEmptyGraph(fmt.Sprintf("failed to find enough (2) candidates for %s: %d", queriedVersion.String(), l))
-	}
-	latest2 := versions[len(versions)-2]
-	if latest2.LTE(queriedVersion) {
-		logrus.WithField("latest2", latest2.String()).WithField("queriedVersion", queriedVersion.String()).Warning("Failed to get 2 update paths")
-		return s.generateEmptyGraph(fmt.Sprintf("failed to find enough (2) update paths for %s", queriedVersion.String()))
-	}
 
-	nodeA := NewNodeWithNodeBuilder(s.digestResolver, s.candidatesGetter.latestCandidate, s.client, queriedVersion, queriedVersion, []string{channel}, arch)
-	nodeB := NewNodeWithNodeBuilder(s.digestResolver, s.candidatesGetter.latestCandidate, s.client, queriedVersion, versions[len(versions)-2], []string{channel}, arch)
-	nodeC := NewNodeWithNodeBuilder(s.digestResolver, s.candidatesGetter.latestCandidate, s.client, queriedVersion, versions[len(versions)-1], []string{channel}, arch)
+	versionA := queriedVersion
+
+	versionB := queriedVersion
+	versionB.Patch++
+	versionB.Pre = nil
+
+	versionC := versionB
+	versionC.Patch++
+	versionC.Pre = nil
+
+	nodeA := NewNode(versionA, channel)
+	nodeB := NewNode(versionB, channel)
+	nodeC := NewNode(versionC, channel)
 
 	conditionalEdges := []ConditionalEdge{
 		{
